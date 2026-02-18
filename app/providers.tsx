@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { SupabaseConfigProvider } from '@/context/SupabaseConfigProvider'
 import { AuthProvider } from '@/context/AuthProvider'
 import { ToastProvider } from '@/context/ToastContext'
 import { DeveloperModeProvider } from '@/context/DeveloperModeContext'
@@ -24,11 +25,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       <SuppressAuthAbortError />
-      <AuthProvider>
-        <DeveloperModeProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </DeveloperModeProvider>
-      </AuthProvider>
+      <SupabaseConfigProvider>
+        <AuthProvider>
+          <DeveloperModeProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </DeveloperModeProvider>
+        </AuthProvider>
+      </SupabaseConfigProvider>
     </>
   )
 }
