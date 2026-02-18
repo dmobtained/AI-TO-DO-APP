@@ -15,6 +15,10 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState | null>(null)
 
+function isAbortError(e: unknown): boolean {
+  return e instanceof Error && e.name === 'AbortError'
+}
+
 function getRoleFromMetadata(meta: unknown): Role {
   if (typeof meta !== 'string') return 'USER'
   const u = meta.toUpperCase()
@@ -39,17 +43,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const fetchProfileRole = useCallback(async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle()
-    return data?.role === 'ADMIN' ? 'ADMIN' : 'USER'
-  }, [])
+    try {
+      const { data } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle()
+      return data?.role === 'ADMIN' ? 'ADMIN' : 'USER'
+    } catch (e) {
+      if (isAbortError(e)) throw e
+      return 'USER'
+    }
+  }, [supabase])
 
   useEffect(() => {
     let mounted = true
+    let initialFired = false
 
-    async function init() {
-      try {
-        const { data: { session: s } } = await supabase.auth.getSession()
-        if (!mounted) return
+    const { data } = supabase.auth.onAuthStateChange(async (_event, s) => {
+      if (!mounted) return
+      if (!initialFired) {
+        initialFired = true
         setAuth(s)
         if (s?.user) {
           const metaRole = getRoleFromMetadata(s.user.user_metadata?.role)
@@ -58,23 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const profileRole = await fetchProfileRole(s.user.id)
               if (mounted) setRole(profileRole)
             } catch (e) {
-              if (e instanceof Error && e.name !== 'AbortError' && mounted) setRole('USER')
+              if (!isAbortError(e) && mounted) setRole('USER')
             }
           }
         }
-      } catch (e) {
-        if (e instanceof Error && e.name === 'AbortError') {
-          if (mounted) setLoading(false)
-          return
-        }
-      } finally {
         if (mounted) setLoading(false)
+        return
       }
-    }
-    init()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
-      if (!mounted) return
       try {
         setAuth(s)
         if (s?.user && getRoleFromMetadata(s.user.user_metadata?.role) !== 'ADMIN') {
@@ -82,13 +82,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (mounted) setRole(profileRole)
         }
       } catch (e) {
-        if (e instanceof Error && e.name === 'AbortError') return
+        if (!isAbortError(e)) {
+          if (mounted) setRole('USER')
+        }
       }
     })
 
+    const subscription = data.subscription
+    const fallback = setTimeout(() => {
+      if (mounted && !initialFired) {
+        initialFired = true
+        setLoading(false)
+      }
+    }, 300)
+
     return () => {
+      clearTimeout(fallback)
       mounted = false
-      subscription.unsubscribe()
+      subscription?.unsubscribe()
     }
   }, [setAuth, fetchProfileRole])
 

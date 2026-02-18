@@ -37,19 +37,6 @@ type Task = {
   details?: string | null
 }
 
-type DaynoteResponse = {
-  note: string
-}
-
-type DaynoteTaskPayload = {
-  id: string
-  title: string
-  details: string | null
-  priority: string | null
-  due_date: string | null
-  status?: string
-}
-
 function isSameDay(iso: string | null, day: Date): boolean {
   if (!iso) return false
   const d = new Date(iso)
@@ -180,13 +167,6 @@ export default function DashboardPage() {
   }
 
   const handleGenerateDaynote = useCallback(async () => {
-    const webhookUrl = process.env.NEXT_PUBLIC_N8N_AI_HUB_WEBHOOK
-    if (!webhookUrl?.trim()) {
-      setDaynoteStatus('error')
-      setDaynoteError('AI Hub-webhook is niet geconfigureerd.')
-      return
-    }
-
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       setDaynoteStatus('error')
@@ -198,65 +178,22 @@ export default function DashboardPage() {
     setDaynoteError(null)
     setDaynote(null)
 
-    const { data: tasksData, error: tasksError } = await supabase
-      .from('tasks')
-      .select('id, title, details, priority, due_date, status')
-      .eq('user_id', user.id)
-      .eq('status', 'OPEN')
-
-    if (tasksError) {
-      setDaynoteStatus('error')
-      setDaynoteError(tasksError.message)
-      toast(tasksError.message, 'error')
-      return
-    }
-
-    const tasks = (tasksData ?? []) as DaynoteTaskPayload[]
-    if (tasks.length === 0) {
-      setDaynoteStatus('idle')
-      toast('Geen open taken beschikbaar.')
-      return
-    }
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
-
     try {
-      const res = await fetch('https://datadenkt.app.n8n.cloud/webhook/ai-hub', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'daynote',
-          tasks: tasks.map((t) => ({
-            title: t.title,
-            status: t.status,
-            date: (t as { date?: string | null }).date ?? t.due_date ?? null,
-          })),
-        }),
-        signal: controller.signal,
-      })
-      clearTimeout(timeoutId)
+      const res = await fetch('/api/ai/daynote', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      const message = typeof data?.error === 'string' ? data.error : undefined
 
       if (!res.ok) {
         setDaynoteStatus('error')
-        setDaynoteError(`Webhook antwoordde met ${res.status}.`)
-        toast('Dagnotitie kon niet worden opgehaald.', 'error')
+        setDaynoteError(message ?? (res.status === 503 ? 'AI Hub-webhook is niet geconfigureerd.' : `Fout: ${res.status}`))
+        toast(message ?? 'Dagnotitie kon niet worden opgehaald.', 'error')
         return
       }
 
-      let json: DaynoteResponse
-      try {
-        json = (await res.json()) as DaynoteResponse
-      } catch (parseErr) {
-        setDaynoteStatus('error')
-        setDaynoteError('Ongeldige JSON in antwoord.')
-        toast('Antwoord van AI Hub kon niet worden gelezen.', 'error')
-        return
-      }
-      const note = json?.note
+      const note = data?.note
       if (typeof note !== 'string' || note.length <= 20) {
         setDaynoteStatus('error')
-        setDaynoteError('Ongeldige of te korte notitie van de webhook.')
+        setDaynoteError('Ongeldige of te korte notitie ontvangen.')
         toast('Ongeldige notitie ontvangen.', 'error')
         return
       }
@@ -264,22 +201,11 @@ export default function DashboardPage() {
       setDaynote(note)
       setDaynoteStatus('success')
       toast('Dagnotitie gegenereerd.')
-
-      try {
-        await supabase.from('ai_notes').insert({
-          user_id: user.id,
-          note,
-          created_at: new Date().toISOString(),
-        })
-      } catch (insertErr) {
-        console.warn('[Dagnotitie] Optionele opslag in ai_notes mislukt:', insertErr)
-      }
     } catch (err) {
-      clearTimeout(timeoutId)
       setDaynoteStatus('error')
       const msg = err instanceof Error ? err.message : 'Er is iets misgegaan.'
       setDaynoteError(msg)
-      toast(err instanceof Error && err.name === 'AbortError' ? 'Verzoek time-out (10 s).' : msg, 'error')
+      toast(msg, 'error')
     }
   }, [])
 
@@ -475,17 +401,11 @@ function DashboardCashflowWidget() {
   useEffect(() => {
     let mounted = true
     async function run() {
-      // #region agent log
-      fetch('http://127.0.0.1:7313/ingest/a8f531f6-1245-4c64-950c-ccbe6704ebe2',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'27363b'},body:JSON.stringify({sessionId:'27363b',location:'dashboard/page.tsx:DashboardCashflowWidget',message:'before getUser',data:{},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
-      // #endregion
       let user: { id: string } | null = null
       try {
         const res = await supabase.auth.getUser()
         user = res?.data?.user ?? null
-      } catch (e) {
-        // #region agent log
-        fetch('http://127.0.0.1:7313/ingest/a8f531f6-1245-4c64-950c-ccbe6704ebe2',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'27363b'},body:JSON.stringify({sessionId:'27363b',location:'dashboard/page.tsx:DashboardCashflowWidget',message:'getUser rejected',data:{name:e instanceof Error?e.name:'',isAbort:e instanceof Error&&e.name==='AbortError'},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
-        // #endregion
+      } catch {
         if (!mounted) return
         return
       }
