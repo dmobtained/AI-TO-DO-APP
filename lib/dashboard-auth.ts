@@ -24,8 +24,8 @@ export type DashboardAuthResult = {
  */
 export async function getDashboardAuth(): Promise<DashboardAuthResult> {
   const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.user) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
     return {
       session: null,
       role: 'user',
@@ -36,18 +36,18 @@ export async function getDashboardAuth(): Promise<DashboardAuthResult> {
     }
   }
 
-  const metaRole = session.user.user_metadata?.role
+  const metaRole = user.user_metadata?.role
   const roleFromMeta = typeof metaRole === 'string' && metaRole.toUpperCase() === 'ADMIN' ? 'admin' : 'user'
 
   let role: 'admin' | 'user' = roleFromMeta
-  let profileEmail: string | null = session.user.email ?? null
-  const profileName: string | null = (session.user.user_metadata?.full_name as string) ?? (session.user.user_metadata?.name as string) ?? null
+  let profileEmail: string | null = user.email ?? null
+  const profileName: string | null = (user.user_metadata?.full_name as string) ?? (user.user_metadata?.name as string) ?? null
 
   try {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, email')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .maybeSingle()
 
     if (profile) {
@@ -91,7 +91,7 @@ export async function getDashboardAuth(): Promise<DashboardAuthResult> {
   }
 
   return {
-    session: { user: { id: session.user.id, email: session.user.email ?? undefined, user_metadata: session.user.user_metadata } },
+    session: { user: { id: user.id, email: user.email ?? undefined, user_metadata: user.user_metadata } },
     role,
     flags,
     profileEmail,

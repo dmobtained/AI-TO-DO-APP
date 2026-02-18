@@ -1,9 +1,10 @@
 "use client";
-export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabaseClient";
+
+const LOGIN_TIMEOUT_MS = 10000;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,27 +14,82 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+  const sessionCheckDone = useRef(false);
+
+  // Eenmalige session-check bij mount: als er al een sessie is → ga naar dashboard
+  useEffect(() => {
+    if (sessionCheckDone.current) return;
+    sessionCheckDone.current = true;
+
+    const checkSession = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session) {
+          router.replace("/dashboard");
+        }
+      } catch {
+        // Negeer; gebruiker moet inloggen
+      }
+    };
+
+    checkSession();
+  }, [supabase, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
     try {
-      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-      if (err) {
-        setError(err.message);
+      const loginPromise = supabase.auth.signInWithPassword({ email, password });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("TIMEOUT")), LOGIN_TIMEOUT_MS)
+      );
+
+      const result = await Promise.race([loginPromise, timeoutPromise]);
+
+      if (result.error) {
+        setError(result.error.message);
         setLoading(false);
         return;
       }
-      router.push("/dashboard");
-      router.refresh();
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") {
+
+      // Sessie check met korte timeout (voorkomt hangen)
+      const sessionPromise = supabase.auth.getSession();
+      const sessionTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("SESSION_TIMEOUT")), 3000)
+      );
+      const {
+        data: { session },
+      } = await Promise.race([sessionPromise, sessionTimeout]);
+
+      if (!session) {
+        setError("Sessie kon niet worden opgehaald. Probeer het opnieuw.");
         setLoading(false);
+        return;
+      }
+
+      // Korte pauze zodat cookies (SSR) worden weggeschreven
+      await new Promise((r) => setTimeout(r, 200));
+
+      // Full page navigation zodat server (middleware/layout) de cookies ziet
+      window.location.href = "/dashboard";
+      // loading blijft true tot pagina unloadt
+    } catch (e) {
+      setLoading(false);
+      if (e instanceof Error && e.message === "TIMEOUT") {
+        setError(
+          "Inloggen duurde te lang (timeout). Controleer je internet en of je op de juiste omgeving test (lokaal: .env.local, Railway: Variables)."
+        );
+        return;
+      }
+      if (e instanceof Error && e.message === "SESSION_TIMEOUT") {
+        setError("Sessie ophalen duurde te lang. Vernieuw de pagina en probeer opnieuw.");
         return;
       }
       setError(e instanceof Error ? e.message : "Er ging iets mis.");
-      setLoading(false);
     }
   }
 
@@ -41,7 +97,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-datadenkt-navy flex items-center justify-center px-4">
       <div className="w-full max-w-md mx-auto mt-32 p-8 rounded-2xl card-primary animate-fade-in-up">
         <div className="flex justify-center mb-6">
-          <span className="text-xl font-bold tracking-widest text-datadenkt-white">DATADENKT</span>
+          <span className="text-xl font-bold tracking-widest text-datadenkt-white">
+            DATADENKT
+          </span>
         </div>
         <h1 className="text-3xl font-semibold text-datadenkt-white mb-2 text-center">
           Welkom terug
@@ -58,7 +116,10 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm text-datadenkt-white/70 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-sm text-datadenkt-white/70 mb-2"
+            >
               E-mailadres
             </label>
             <input
@@ -74,7 +135,10 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm text-datadenkt-white/70 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm text-datadenkt-white/70 mb-2"
+            >
               Wachtwoord
             </label>
             <input

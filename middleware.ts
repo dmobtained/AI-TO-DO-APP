@@ -13,48 +13,48 @@ function getModuleNameFromPathname(pathname: string): string | null {
   return null
 }
 
-function isAdmin(session: { user: { user_metadata?: Record<string, unknown> } } | null): boolean {
-  if (!session?.user?.user_metadata?.role) return false
-  const role = String(session.user.user_metadata.role).toUpperCase()
-  return role === 'ADMIN'
+function isAdmin(user: { user_metadata?: Record<string, unknown> } | null | undefined): boolean {
+  if (!user?.user_metadata?.role) return false
+  return String(user.user_metadata.role).toUpperCase() === 'ADMIN'
 }
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request: { headers: request.headers } })
-
   const pathname = request.nextUrl.pathname
   if (!pathname.startsWith(DASHBOARD_PATH)) {
-    return response
+    return NextResponse.next({ request })
   }
 
   const moduleName = getModuleNameFromPathname(pathname)
-  if (!moduleName) return response
+  if (!moduleName) return NextResponse.next({ request })
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return response
+  if (!url || !key) return NextResponse.next({ request })
+
+  let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(url, key, {
     cookies: {
-      get(name: string) {
-        return request.cookies.get(name)?.value
+      getAll() {
+        return request.cookies.getAll()
       },
-      set(name: string, value: string, options: import('@supabase/ssr').CookieOptions) {
-        response.cookies.set({ name, value, ...options })
-      },
-      remove(name: string, options: import('@supabase/ssr').CookieOptions) {
-        response.cookies.set({ name, value: '', ...options })
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          supabaseResponse.cookies.set(name, value, options)
+        })
       },
     },
   })
 
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
+  // getUser() leest sessie; setAll vernieuwt cookies. getClaims() kan in Edge hangen (JWKS).
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  if (isAdmin(session)) {
-    return response
+  if (isAdmin(user)) {
+    return supabaseResponse
   }
 
   const { data: row } = await supabase
@@ -67,7 +67,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(DASHBOARD_PATH, request.url))
   }
 
-  return response
+  return supabaseResponse
 }
 
 export const config = {
