@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase/browser'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import type { FeatureFlags } from '@/lib/feature-flags'
 import { canSeeFeature, type FeatureKey } from '@/lib/feature-flags'
 import type { ModuleStatus } from '@/lib/dashboard-auth'
@@ -45,6 +45,7 @@ export function DashboardShell({
   moduleStatus: initialModuleStatus,
   children,
 }: DashboardShellProps) {
+  const supabase = getSupabaseClient()
   const router = useRouter()
   const pathname = usePathname()
   const { isEnabled: developerMode } = useDeveloperMode()
@@ -57,6 +58,8 @@ export function DashboardShell({
 
   useEffect(() => {
     setMounted(true)
+    document.body.classList.add('dark-dashboard')
+    return () => { document.body.classList.remove('dark-dashboard') }
   }, [])
 
   useEffect(() => {
@@ -122,10 +125,10 @@ export function DashboardShell({
 
   if (!session) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="flex h-screen items-center justify-center bg-[#0f172a]">
         <div className="animate-pulse flex flex-col items-center gap-3">
-          <div className="h-8 w-48 rounded-xl bg-slate-200" />
-          <div className="h-4 w-32 rounded-xl bg-slate-200" />
+          <div className="h-8 w-48 rounded-xl bg-white/10" />
+          <div className="h-4 w-32 rounded-xl bg-white/10" />
         </div>
       </div>
     )
@@ -138,31 +141,31 @@ export function DashboardShell({
   const showFinance = canSeeFeature(flags, 'finance_module', role === 'admin') && (role === 'admin' || moduleStatus['financien'] !== false)
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-[#0f172a]">
       {developerMode && (
-        <div className="sticky top-0 left-0 right-0 z-40 flex items-center justify-center py-2 px-4 bg-yellow-100 border-b border-yellow-300 text-yellow-800 text-sm font-medium">
+        <div className="sticky top-0 left-0 right-0 z-40 flex items-center justify-center py-2 px-4 bg-amber-500/20 border-b border-amber-500/30 text-amber-200 text-sm font-medium">
           ⚙ Developer Mode actief
         </div>
       )}
 
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/30 md:hidden"
+          className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm md:hidden"
           onClick={() => setSidebarOpen(false)}
           aria-hidden
         />
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-30 flex h-full w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-30 flex h-full w-64 flex-col border-r border-white/10 bg-[#111827]/95 backdrop-blur-xl shadow-xl shadow-black/30 transition-transform duration-200 ease-in-out md:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-slate-200">
-          <span className="text-lg font-semibold text-slate-900">Dashboard</span>
+        <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-white/10">
+          <span className="text-lg font-semibold tracking-wide text-slate-100">DATADENKT</span>
           <button
             type="button"
-            className="md:hidden rounded-xl p-2 text-slate-600 hover:bg-slate-100"
+            className="md:hidden rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-slate-100 transition-colors"
             onClick={() => setSidebarOpen(false)}
             aria-label="Menu sluiten"
           >
@@ -184,8 +187,10 @@ export function DashboardShell({
                 <Link
                   href={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex flex-1 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
-                    isActive ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100'
+                  className={`flex flex-1 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 ease-in-out ${
+                    isActive
+                      ? 'bg-emerald-500/20 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] border border-emerald-500/30'
+                      : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
                   }`}
                 >
                   <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,7 +208,7 @@ export function DashboardShell({
                     disabled={togglingModule === item.moduleName}
                     title={isActiveModule ? 'Module actief' : 'Developer mode actief'}
                     className={`shrink-0 min-w-[28px] h-7 rounded-lg px-1.5 flex items-center justify-center transition-all border ${
-                      isActiveModule ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'
+                      isActiveModule ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                     } ${togglingModule === item.moduleName ? 'opacity-60' : ''}`}
                     aria-label={isActiveModule ? 'Module actief' : 'Developer mode actief'}
                   >
@@ -219,7 +224,7 @@ export function DashboardShell({
               <button
                 type="button"
                 onClick={() => setFinanceOpen((o) => !o)}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-200"
               >
                 <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -228,7 +233,7 @@ export function DashboardShell({
                 {financeOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
               </button>
               {financeOpen && (
-                <div className="ml-4 mt-0.5 space-y-0.5 border-l border-slate-200 pl-2">
+                <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2">
                   {FINANCIEN_SUBITEMS.map((sub) => {
                     const isSubActive = pathname === sub.path
                     return (
@@ -236,8 +241,8 @@ export function DashboardShell({
                         key={sub.path}
                         href={sub.path}
                         onClick={() => setSidebarOpen(false)}
-                        className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                          isSubActive ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                        className={`block rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                          isSubActive ? 'bg-emerald-500/20 text-emerald-300' : 'text-slate-400 hover:text-slate-200'
                         }`}
                       >
                         {sub.label}
@@ -257,7 +262,7 @@ export function DashboardShell({
                     disabled={togglingModule === 'financien'}
                     title={moduleStatus['financien'] !== false ? 'Module actief' : 'Developer mode actief'}
                     className={`shrink-0 min-w-[28px] h-6 rounded-lg px-1.5 flex items-center justify-center border text-xs ${
-                      moduleStatus['financien'] !== false ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'
+                      moduleStatus['financien'] !== false ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                     }`}
                     aria-label={moduleStatus['financien'] !== false ? 'Module actief' : 'Developer mode actief'}
                   >
@@ -269,12 +274,12 @@ export function DashboardShell({
           )}
 
           {role === 'admin' && (
-            <div className="flex w-full items-center gap-2 mt-2">
+            <div className="flex w-full items-center gap-2 mt-4 pt-4 border-t border-white/10">
               <Link
                 href="/dashboard/admin"
                 onClick={() => setSidebarOpen(false)}
-                className={`flex flex-1 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
-                  pathname === '/dashboard/admin' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100'
+                className={`flex flex-1 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 ${
+                  pathname === '/dashboard/admin' ? 'bg-emerald-500/20 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] border border-emerald-500/30' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
                 }`}
               >
                 <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,7 +296,7 @@ export function DashboardShell({
                 disabled={togglingModule === 'admin'}
                 title={moduleStatus['admin'] !== false ? 'Module actief' : 'Developer mode actief'}
                 className={`shrink-0 min-w-[28px] h-7 rounded-lg px-1.5 flex items-center justify-center border ${
-                  moduleStatus['admin'] !== false ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'
+                  moduleStatus['admin'] !== false ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                 } ${togglingModule === 'admin' ? 'opacity-60' : ''}`}
                 aria-label={moduleStatus['admin'] !== false ? 'Module actief' : 'Developer mode actief'}
               >
@@ -303,33 +308,38 @@ export function DashboardShell({
       </aside>
 
       <div className="flex flex-1 flex-col min-w-0 pl-0 md:pl-64">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 md:px-6">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-[#111827]/80 backdrop-blur-xl px-4 md:px-6">
+          <div className="flex items-center gap-4 min-w-0">
             <button
               type="button"
-              className="md:hidden rounded-xl p-2 text-slate-600 hover:bg-slate-100"
+              className="md:hidden rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-slate-100 transition-colors"
               onClick={() => setSidebarOpen(true)}
               aria-label="Menu openen"
             >
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
-            <p className="text-sm font-medium text-slate-700 truncate">{greeting}</p>
+            <p className="text-sm font-semibold text-slate-100 truncate">{greeting}</p>
             <span className="text-slate-500 text-sm tabular-nums" suppressHydrationWarning>
               {mounted ? currentTime : '--:--'}
             </span>
           </div>
-          <div className="flex items-center gap-2 md:gap-4 shrink-0">
-            <span className="text-sm text-slate-600 truncate max-w-[140px] md:max-w-[200px]" title={email}>
+          <div className="flex items-center gap-3 shrink-0">
+            <input
+              type="search"
+              placeholder="Zoeken..."
+              className="hidden sm:block w-40 md:w-52 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-all"
+            />
+            <span className="text-xs text-slate-500 truncate max-w-[120px] md:max-w-[180px]" title={email}>
               {email}
             </span>
             {developerMode && (
-              <span className="text-xs text-slate-500 hidden sm:inline">Developer Mode</span>
+              <span className="text-xs text-amber-400/80 hidden sm:inline">Dev</span>
             )}
-            <span
-              className={`inline-flex rounded-xl px-2.5 py-1 text-xs font-medium ${
-                role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
-              }`}
-            >
+            <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-slate-300 font-medium ring-2 ring-emerald-500/30">
+              {(profileName ?? email).slice(0, 1).toUpperCase()}
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-[#111827]" title="Online" />
+            </span>
+            <span className={`hidden sm:inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${role === 'admin' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'}`}>
               {role === 'admin' ? 'admin' : 'user'}
             </span>
           </div>

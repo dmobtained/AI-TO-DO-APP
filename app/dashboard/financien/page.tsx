@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase/browser'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useAuth } from '@/context/AuthProvider'
 import { useDashboard } from '@/context/DashboardContext'
 import { FeatureGuard } from '@/components/FeatureGuard'
@@ -13,6 +13,7 @@ import { getMonthRange } from './components/types'
 import { Building2, CreditCard, PiggyBank, Receipt } from 'lucide-react'
 
 export default function FinancienOverviewPage() {
+  const supabase = getSupabaseClient()
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [entries, setEntries] = useState<FinanceEntry[]>([])

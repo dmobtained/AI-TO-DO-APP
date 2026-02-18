@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase/browser'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useAuth } from '@/context/AuthProvider'
 import { useDashboard } from '@/context/DashboardContext'
 import { useDeveloperMode } from '@/context/DeveloperModeContext'
@@ -11,6 +11,7 @@ import { useDeveloperMode } from '@/context/DeveloperModeContext'
 const EMAIL_ENABLED_KEY = 'email_enabled_'
 
 export default function InstellingenPage() {
+  const supabase = getSupabaseClient()
   const router = useRouter()
   const { user, role, loading: authLoading } = useAuth()
   const { canSee } = useDashboard()

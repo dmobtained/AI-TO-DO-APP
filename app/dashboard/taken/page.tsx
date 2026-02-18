@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase/browser'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useAuth } from '@/context/AuthProvider'
 import { useToast } from '@/context/ToastContext'
 import { FeatureGuard } from '@/components/FeatureGuard'
@@ -111,6 +111,7 @@ function StatCard({ icon, value, label }: { icon: React.ReactNode; value: number
 }
 
 export default function TakenPage() {
+  const supabase = getSupabaseClient()
   const router = useRouter()
   const toast = useToast()
   const [tasks, setTasks] = useState<Task[]>([])

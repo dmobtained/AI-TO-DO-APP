@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/browser'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useAuth } from '@/context/AuthProvider'
 import { useToast } from '@/context/ToastContext'
 import { FeatureGuard } from '@/components/FeatureGuard'
@@ -13,6 +13,7 @@ import { EmailDetail } from '@/app/mail/components/EmailDetail'
 const AI_HUB_WEBHOOK = 'https://datadenkt.app.n8n.cloud/webhook/ai-hub'
 
 export default function DashboardEmailPage() {
+  const supabase = getSupabaseClient()
   const [emails, setEmails] = useState<Email[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null)

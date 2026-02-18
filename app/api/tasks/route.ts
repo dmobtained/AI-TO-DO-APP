@@ -40,8 +40,7 @@ export async function GET() {
         today: todayCount,
       },
     })
-  } catch (error) {
-    console.error('Fout in GET /api/tasks:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Interne serverfout.' },
       { status: 500 }

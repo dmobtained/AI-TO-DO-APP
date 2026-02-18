@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/browser'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import type { Session, User } from '@supabase/supabase-js'
 
 type Role = 'ADMIN' | 'USER' | null
@@ -22,6 +22,7 @@ function getRoleFromMetadata(meta: unknown): Role {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const supabase = getSupabaseClient()
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [role, setRole] = useState<Role>(null)
@@ -53,9 +54,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (s?.user) {
           const metaRole = getRoleFromMetadata(s.user.user_metadata?.role)
           if (metaRole !== 'ADMIN') {
-            const profileRole = await fetchProfileRole(s.user.id)
-            if (mounted) setRole(profileRole)
+            try {
+              const profileRole = await fetchProfileRole(s.user.id)
+              if (mounted) setRole(profileRole)
+            } catch (e) {
+              if (e instanceof Error && e.name !== 'AbortError' && mounted) setRole('USER')
+            }
           }
+        }
+      } catch (e) {
+        if (e instanceof Error && e.name === 'AbortError') {
+          if (mounted) setLoading(false)
+          return
         }
       } finally {
         if (mounted) setLoading(false)
@@ -65,10 +75,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       if (!mounted) return
-      setAuth(s)
-      if (s?.user && getRoleFromMetadata(s.user.user_metadata?.role) !== 'ADMIN') {
-        const profileRole = await fetchProfileRole(s.user.id)
-        if (mounted) setRole(profileRole)
+      try {
+        setAuth(s)
+        if (s?.user && getRoleFromMetadata(s.user.user_metadata?.role) !== 'ADMIN') {
+          const profileRole = await fetchProfileRole(s.user.id)
+          if (mounted) setRole(profileRole)
+        }
+      } catch (e) {
+        if (e instanceof Error && e.name === 'AbortError') return
       }
     })
 

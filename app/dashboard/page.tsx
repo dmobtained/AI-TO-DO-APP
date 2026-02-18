@@ -4,9 +4,11 @@ export const dynamic = "force-dynamic";
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase/browser'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useDashboard } from '@/context/DashboardContext'
 import { useToast } from '@/context/ToastContext'
+import { OverviewCard } from '@/components/dashboard/OverviewCard'
+import { LayoutDashboard, Calendar, TrendingUp, Sparkles } from 'lucide-react'
 
 function getMonthRange() {
   const now = new Date()
@@ -55,6 +57,7 @@ function isSameDay(iso: string | null, day: Date): boolean {
 }
 
 export default function DashboardPage() {
+  const supabase = getSupabaseClient()
   const router = useRouter()
   const { canSee } = useDashboard()
   const toast = useToast()
@@ -283,75 +286,51 @@ export default function DashboardPage() {
   const freeToSpend = incomeMonth - expenseMonth
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-      <p className="text-slate-500 text-sm mt-0.5">Overzicht van vandaag en deze maand</p>
+    <div className="mx-auto max-w-6xl animate-fade-in-up">
+      <h1 className="text-2xl font-semibold tracking-tight text-slate-100">Dashboard</h1>
+      <p className="text-slate-400 text-sm mt-1">Overzicht van vandaag en deze maand</p>
 
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50 transition-colors">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-slate-900">{loading ? '—' : openTasksToday}</p>
-              <p className="text-sm text-slate-500">Open taken vandaag</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50 transition-colors">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-slate-900">€ {loading ? '—' : incomeMonth.toFixed(2)}</p>
-              <p className="text-sm text-slate-500">Inkomsten deze maand</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50 transition-colors">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2h-2m-4-1V7a2 2 0 012-2h2a2 2 0 012 2v6a2 2 0 01-2 2h-2m-4-1V7a2 2 0 012-2h2a2 2 0 012 2v6" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-slate-900">€ {loading ? '—' : expenseMonth.toFixed(2)}</p>
-              <p className="text-sm text-slate-500">Uitgaven deze maand</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50 transition-colors">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-slate-900">€ {loading ? '—' : freeToSpend.toFixed(2)}</p>
-              <p className="text-sm text-slate-500">Vrij besteedbaar</p>
-            </div>
-          </div>
-        </div>
+        <OverviewCard
+          title="Open taken vandaag"
+          value={loading ? '—' : openTasksToday}
+          icon={<LayoutDashboard className="h-6 w-6" />}
+          accent="blue"
+          delay={0}
+        />
+        <OverviewCard
+          title="Vandaag"
+          value={loading ? '—' : focusTasks.length}
+          icon={<Calendar className="h-6 w-6" />}
+          accent="emerald"
+          delay={50}
+        />
+        <OverviewCard
+          title="Maand Cashflow"
+          value={loading ? '—' : `€ ${freeToSpend.toFixed(2)}`}
+          icon={<TrendingUp className="h-6 w-6" />}
+          accent={freeToSpend >= 0 ? 'emerald' : 'red'}
+          delay={100}
+        />
+        <OverviewCard
+          title="AI Suggesties"
+          value={daynoteStatus === 'success' ? 'Klaar' : loading ? '—' : 'Genereer'}
+          icon={<Sparkles className="h-6 w-6" />}
+          accent="slate"
+          delay={150}
+        />
       </div>
 
-      <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Dagnotitie</h2>
+      <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/30 transition-all duration-200 hover:border-white/20">
+        <h2 className="text-lg font-semibold text-slate-100 mb-4">Dagnotitie</h2>
         <button
           type="button"
           onClick={handleGenerateDaynote}
           disabled={daynoteStatus === 'loading'}
-          className="w-auto rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center gap-2 transition-colors"
+          className="w-auto rounded-xl bg-emerald-500/20 border border-emerald-500/30 px-4 py-2.5 text-sm font-medium text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center gap-2 transition-all duration-200"
         >
           {daynoteStatus === 'loading' && (
-            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
@@ -359,14 +338,14 @@ export default function DashboardPage() {
           Genereer Dagnotitie
         </button>
         {daynoteStatus === 'error' && daynoteError && (
-          <p className="mt-3 text-sm text-red-600">{daynoteError}</p>
+          <p className="mt-3 text-sm text-red-400">{daynoteError}</p>
         )}
         {daynoteStatus === 'success' && daynote && (
-          <div className="mt-4 pt-4 border-t border-slate-200">
+          <div className="mt-4 pt-4 border-t border-white/10">
             <p className="text-xs text-slate-500 mb-2">
               {new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
-            <pre className="text-sm text-slate-700 whitespace-pre-line font-sans bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <pre className="text-sm text-slate-300 whitespace-pre-line font-sans bg-white/5 p-4 rounded-xl border border-white/10">
               {daynote}
             </pre>
             <button
@@ -375,7 +354,7 @@ export default function DashboardPage() {
                 void navigator.clipboard.writeText(daynote)
                 toast('Gekopieerd naar klembord.')
               }}
-              className="mt-2 rounded-xl bg-blue-100 text-blue-700 px-3 py-1.5 text-sm hover:bg-blue-200 transition-colors"
+              className="mt-2 rounded-xl bg-emerald-500/20 text-emerald-300 px-3 py-1.5 text-sm hover:bg-emerald-500/30 transition-colors duration-200"
             >
               Kopiëren
             </button>
@@ -385,43 +364,41 @@ export default function DashboardPage() {
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {canSee('dashboard_tasks_list') && (
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden hover:bg-slate-50 transition-colors">
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">Open taken</h2>
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl shadow-black/30 overflow-hidden transition-all duration-200 hover:scale-[1.01] hover:border-white/20">
+            <div className="px-6 py-4 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-slate-100">Open taken</h2>
             </div>
             {loading ? (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-white/5">
                 {[1, 2, 3, 4].map((i) => (
                   <li key={i} className="px-6 py-4">
-                    <div className="h-5 w-3/4 rounded bg-slate-200 animate-pulse" />
+                    <div className="h-5 w-3/4 rounded bg-white/10 animate-pulse" />
                   </li>
                 ))}
               </ul>
             ) : openTasks.length === 0 ? (
               <div className="px-6 py-8 text-center text-slate-500 text-sm">Geen open taken.</div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-white/5">
                 {openTasks.map((task) => (
-                  <li key={task.id} className="px-6 py-3 flex items-center gap-3">
+                  <li key={task.id} className="px-6 py-3 flex items-center gap-3 group">
                     <button
                       type="button"
                       onClick={() => handleToggleTask(task)}
-                      className="shrink-0 w-5 h-5 rounded border-2 border-slate-300 bg-white flex items-center justify-center hover:border-blue-500 transition-colors"
+                      className="shrink-0 w-5 h-5 rounded-full border-2 border-white/30 bg-transparent flex items-center justify-center hover:border-emerald-500 transition-colors duration-200"
                       aria-label="Afvinken"
                     >
                       {task.status === 'DONE' && (
-                        <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
-                          <path d="M10.28 2.28L3.989 8.575 1.695 6.28A1 1 0 00.28 7.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 2.28z" />
-                        </svg>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
                       )}
                     </button>
-                    <Link href="/dashboard/taken" className="flex-1 min-w-0 truncate text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors">
+                    <Link href="/dashboard/taken" className="flex-1 min-w-0 truncate text-sm font-medium text-slate-200 hover:text-emerald-400 transition-colors duration-200">
                       {task.title}
                     </Link>
                     <button
                       type="button"
                       onClick={() => handleDeleteTask(task.id, task.user_id)}
-                      className="shrink-0 text-xs text-slate-500 hover:text-red-600 transition-colors"
+                      className="shrink-0 text-xs text-slate-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       Verwijderen
                     </button>
@@ -433,41 +410,39 @@ export default function DashboardPage() {
         )}
 
         {canSee('focus_today') && (
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden hover:bg-slate-50 transition-colors">
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">Focusblok vandaag</h2>
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl shadow-black/30 overflow-hidden transition-all duration-200 hover:scale-[1.01] hover:border-white/20">
+            <div className="px-6 py-4 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-slate-100">Focusblok vandaag</h2>
             </div>
             {loading ? (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-white/5">
                 {[1, 2, 3].map((i) => (
                   <li key={i} className="px-6 py-4">
-                    <div className="h-5 w-2/3 rounded bg-slate-200 animate-pulse" />
+                    <div className="h-5 w-2/3 rounded bg-white/10 animate-pulse" />
                   </li>
                 ))}
               </ul>
             ) : focusTasks.length === 0 ? (
               <div className="px-6 py-8 text-center text-slate-500 text-sm">Geen prioriteiten.</div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-white/5">
                 {focusTasks.map((task) => (
-                  <li key={task.id} className="px-6 py-3 flex items-center gap-3">
+                  <li key={task.id} className="px-6 py-3 flex items-center gap-3 group">
                     <button
                       type="button"
                       onClick={() => handleToggleTask(task)}
-                      className="shrink-0 w-5 h-5 rounded border-2 border-slate-300 bg-white flex items-center justify-center hover:border-blue-500 transition-colors"
+                      className="shrink-0 w-5 h-5 rounded-full border-2 border-white/30 bg-transparent flex items-center justify-center hover:border-emerald-500 transition-colors duration-200"
                       aria-label="Markeer als gedaan"
                     >
                       {task.status === 'DONE' && (
-                        <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
-                          <path d="M10.28 2.28L3.989 8.575 1.695 6.28A1 1 0 00.28 7.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 2.28z" />
-                        </svg>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
                       )}
                     </button>
-                    <span className="flex-1 min-w-0 truncate text-sm font-medium text-slate-900">{task.title}</span>
+                    <span className="flex-1 min-w-0 truncate text-sm font-medium text-slate-200">{task.title}</span>
                     <button
                       type="button"
                       onClick={() => handleDeleteTask(task.id, task.user_id)}
-                      className="shrink-0 text-xs text-slate-500 hover:text-red-600 transition-colors"
+                      className="shrink-0 text-xs text-slate-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       Verwijderen
                     </button>
@@ -492,6 +467,7 @@ export default function DashboardPage() {
 }
 
 function DashboardCashflowWidget() {
+  const supabase = getSupabaseClient()
   const [status, setStatus] = useState<'loading' | 'data' | 'nodata'>('loading')
   const [forecast7, setForecast7] = useState<string | null>(null)
   const [forecast30, setForecast30] = useState<string | null>(null)
@@ -541,12 +517,12 @@ function DashboardCashflowWidget() {
   }, [])
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50 transition-colors">
-      <h2 className="text-lg font-semibold text-slate-900 mb-2">Cashflow voorspelling</h2>
+    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/30 transition-all duration-200 hover:scale-[1.02] hover:border-white/20">
+      <h2 className="text-lg font-semibold text-slate-100 mb-2">Cashflow voorspelling</h2>
       {status === 'loading' && <p className="text-slate-500 text-sm">Laden…</p>}
       {status === 'nodata' && <p className="text-slate-500 text-sm">Nog onvoldoende data</p>}
       {status === 'data' && (
-        <div className="space-y-1 text-sm text-slate-700">
+        <div className="space-y-1 text-sm text-slate-300">
           <p>7 dagen: € {Number(forecast7).toFixed(2)}</p>
           <p>30 dagen: € {Number(forecast30).toFixed(2)}</p>
         </div>
@@ -556,6 +532,7 @@ function DashboardCashflowWidget() {
 }
 
 function DashboardWarningsWidget() {
+  const supabase = getSupabaseClient()
   const [warnings, setWarnings] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -607,12 +584,12 @@ function DashboardWarningsWidget() {
   }, [])
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50 transition-colors">
-      <h2 className="text-lg font-semibold text-slate-900 mb-2">Financiële waarschuwingen</h2>
+    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/30 transition-all duration-200 hover:scale-[1.02] hover:border-white/20">
+      <h2 className="text-lg font-semibold text-slate-100 mb-2">Financiële waarschuwingen</h2>
       {loading && <p className="text-slate-500 text-sm">Laden…</p>}
       {!loading && warnings.length === 0 && <p className="text-slate-500 text-sm">Geen waarschuwingen</p>}
       {!loading && warnings.length > 0 && (
-        <ul className="list-disc list-inside text-sm text-amber-700 space-y-1">
+        <ul className="list-disc list-inside text-sm text-amber-400/90 space-y-1">
           {warnings.map((w, i) => (
             <li key={i}>{w}</li>
           ))}
@@ -623,6 +600,7 @@ function DashboardWarningsWidget() {
 }
 
 function DashboardProductivityWidget() {
+  const supabase = getSupabaseClient()
   const [ratio, setRatio] = useState<number | null>(null)
   const [trend, setTrend] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -657,11 +635,11 @@ function DashboardProductivityWidget() {
   }, [])
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50 transition-colors">
-      <h2 className="text-lg font-semibold text-slate-900 mb-2">Productiviteitsmeter</h2>
+    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/30 transition-all duration-200 hover:scale-[1.02] hover:border-white/20">
+      <h2 className="text-lg font-semibold text-slate-100 mb-2">Productiviteitsmeter</h2>
       {loading && <p className="text-slate-500 text-sm">Laden…</p>}
       {!loading && (
-        <p className="text-slate-700">
+        <p className="text-slate-300">
           {ratio != null ? `${ratio}% afgerond (deze week)` : '—'} {trend && ` · ${trend}`}
         </p>
       )}
@@ -670,6 +648,7 @@ function DashboardProductivityWidget() {
 }
 
 function DashboardDecisionLogWidget() {
+  const supabase = getSupabaseClient()
   const [decisions, setDecisions] = useState<{ id: string; title: string; user_id: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [title, setTitle] = useState('')
@@ -738,15 +717,15 @@ function DashboardDecisionLogWidget() {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50 transition-colors">
-      <h2 className="text-lg font-semibold text-slate-900 mb-3">Beslissingslogboek</h2>
+    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/30 transition-all duration-200 hover:scale-[1.02] hover:border-white/20">
+      <h2 className="text-lg font-semibold text-slate-100 mb-3">Beslissingslogboek</h2>
       <form onSubmit={handleAdd} className="space-y-2 mb-4">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Beslissing"
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 disabled:opacity-50"
           disabled={adding}
         />
         <input
@@ -754,10 +733,10 @@ function DashboardDecisionLogWidget() {
           value={why}
           onChange={(e) => setWhy(e.target.value)}
           placeholder="Waarom (optioneel)"
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 disabled:opacity-50"
           disabled={adding}
         />
-        <button type="submit" disabled={adding || !title.trim()} className="rounded-xl bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+        <button type="submit" disabled={adding || !title.trim()} className="rounded-xl bg-emerald-500/20 border border-emerald-500/30 px-3 py-1.5 text-sm text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-50 transition-colors duration-200">
           {adding ? 'Bezig…' : 'Toevoegen'}
         </button>
       </form>
@@ -767,8 +746,8 @@ function DashboardDecisionLogWidget() {
         <ul className="space-y-1 text-sm">
           {decisions.map((d) => (
             <li key={d.id} className="flex items-center justify-between gap-2">
-              <span className="truncate text-slate-700">{d.title.replace(/^\[DECISION\]\s*/, '')}</span>
-              <button type="button" onClick={() => handleDelete(d.id, d.user_id)} className="text-slate-500 hover:text-red-600 shrink-0 transition-colors">Verwijderen</button>
+              <span className="truncate text-slate-300">{d.title.replace(/^\[DECISION\]\s*/, '')}</span>
+              <button type="button" onClick={() => handleDelete(d.id, d.user_id)} className="text-slate-500 hover:text-red-400 shrink-0 transition-colors">Verwijderen</button>
             </li>
           ))}
         </ul>

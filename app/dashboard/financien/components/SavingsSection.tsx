@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { supabase } from '@/lib/supabase/browser'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import type { FinanceEntry } from './types'
 import { formatDate, savingsBalance, SAVINGS_PREFIX, SAVINGS_WITHDRAW_PREFIX, SAVINGS_RATE_KEY } from './types'
 
@@ -15,6 +15,7 @@ export type SavingsSectionProps = {
 }
 
 export function SavingsSection({ userId, savingsEntries, vrijBesteedbaar, totalExpense, toast, onRefresh }: SavingsSectionProps) {
+  const supabase = getSupabaseClient()
   const [depositAmount, setDepositAmount] = useState('')
   const [depositDate, setDepositDate] = useState(new Date().toISOString().slice(0, 10))
   const [depositNote, setDepositNote] = useState('')

@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase/browser'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useAuth } from '@/context/AuthProvider'
 import { useToast } from '@/context/ToastContext'
 import { useDashboard } from '@/context/DashboardContext'
@@ -13,6 +13,7 @@ import { getMonthRange } from '../components/types'
 import { BankzaldoSection } from '../components/BankzaldoSection'
 
 export default function FinancienBankPage() {
+  const supabase = getSupabaseClient()
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { canSee, isAdmin } = useDashboard()
