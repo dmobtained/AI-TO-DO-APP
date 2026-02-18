@@ -1,5 +1,8 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/browser'
 import { useAuth } from '@/context/AuthProvider'

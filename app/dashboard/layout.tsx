@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { redirect } from 'next/navigation'
 import { getDashboardAuth } from '@/lib/dashboard-auth'
 import { DashboardShell } from './DashboardShell'
