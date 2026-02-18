@@ -38,15 +38,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4">
-      <div className="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8 animate-fade-in-up">
+    <div className="min-h-screen bg-datadenkt-navy flex items-center justify-center px-4">
+      <div className="w-full max-w-md mx-auto mt-32 p-8 rounded-2xl card-primary animate-fade-in-up">
         <div className="flex justify-center mb-6">
-          <span className="text-xl font-bold tracking-widest text-white/90">DATADENKT</span>
+          <span className="text-xl font-bold tracking-widest text-datadenkt-white">DATADENKT</span>
         </div>
-        <h1 className="text-3xl font-semibold text-white mb-2 text-center">
+        <h1 className="text-3xl font-semibold text-datadenkt-white mb-2 text-center">
           Welkom terug
         </h1>
-        <p className="text-slate-400 text-center mb-8">
+        <p className="text-datadenkt-white/70 text-center mb-8">
           Log in om toegang te krijgen tot je dashboard
         </p>
 
@@ -58,7 +58,7 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm text-slate-400 mb-2">
+            <label htmlFor="email" className="block text-sm text-datadenkt-white/70 mb-2">
               E-mailadres
             </label>
             <input
@@ -69,12 +69,12 @@ export default function LoginPage() {
               placeholder="naam@email.nl"
               required
               autoComplete="email"
-              className="w-full px-4 py-3 bg-slate-800/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500/50 focus:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition"
+              className="w-full px-4 py-3 bg-datadenkt-navy-dark border border-white/10 rounded-xl text-datadenkt-white placeholder:text-datadenkt-white/50 focus:outline-none focus:ring-2 focus:ring-datadenkt-teal focus:border-datadenkt-teal transition-all duration-200"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm text-slate-400 mb-2">
+            <label htmlFor="password" className="block text-sm text-datadenkt-white/70 mb-2">
               Wachtwoord
             </label>
             <input
@@ -85,23 +85,23 @@ export default function LoginPage() {
               placeholder="••••••••"
               required
               autoComplete="current-password"
-              className="w-full px-4 py-3 bg-slate-800/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500/50 focus:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition"
+              className="w-full px-4 py-3 bg-datadenkt-navy-dark border border-white/10 rounded-xl text-datadenkt-white placeholder:text-datadenkt-white/50 focus:outline-none focus:ring-2 focus:ring-datadenkt-teal focus:border-datadenkt-teal transition-all duration-200"
             />
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
+            <label className="flex items-center gap-2 text-datadenkt-white/70 cursor-pointer">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="accent-emerald-500 rounded"
+                className="accent-datadenkt-orange rounded focus:ring-2 focus:ring-datadenkt-teal"
               />
               Onthoud mij
             </label>
             <a
               href="#"
-              className="text-emerald-400 hover:text-emerald-300 transition"
+              className="text-datadenkt-teal hover:text-datadenkt-teal/90 transition-all duration-200"
               onClick={(e) => e.preventDefault()}
             >
               Wachtwoord vergeten?
@@ -111,7 +111,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 hover:scale-[1.02] active:scale-[0.98] text-white rounded-xl font-medium transition duration-200 shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="w-full py-3 btn-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
           >
             {loading ? "Bezig met inloggen…" : "Inloggen"}
           </button>

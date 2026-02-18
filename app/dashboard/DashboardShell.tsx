@@ -58,8 +58,7 @@ export function DashboardShell({
 
   useEffect(() => {
     setMounted(true)
-    document.body.classList.add('dark-dashboard')
-    return () => { document.body.classList.remove('dark-dashboard') }
+    return () => {}
   }, [])
 
   useEffect(() => {
@@ -125,7 +124,7 @@ export function DashboardShell({
 
   if (!session) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0f172a]">
+      <div className="flex h-screen items-center justify-center bg-datadenkt-navy">
         <div className="animate-pulse flex flex-col items-center gap-3">
           <div className="h-8 w-48 rounded-xl bg-white/10" />
           <div className="h-4 w-32 rounded-xl bg-white/10" />
@@ -141,9 +140,9 @@ export function DashboardShell({
   const showFinance = canSeeFeature(flags, 'finance_module', role === 'admin') && (role === 'admin' || moduleStatus['financien'] !== false)
 
   return (
-    <div className="flex h-screen bg-[#0f172a]">
+    <div className="flex h-screen bg-datadenkt-navy">
       {developerMode && (
-        <div className="sticky top-0 left-0 right-0 z-40 flex items-center justify-center py-2 px-4 bg-amber-500/20 border-b border-amber-500/30 text-amber-200 text-sm font-medium">
+        <div className="sticky top-0 left-0 right-0 z-40 flex items-center justify-center py-2 px-4 bg-datadenkt-orange/20 border-b border-datadenkt-orange/30 text-datadenkt-white text-sm font-medium">
           ⚙ Developer Mode actief
         </div>
       )}
@@ -157,169 +156,173 @@ export function DashboardShell({
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-30 flex h-full w-64 flex-col border-r border-white/10 bg-[#111827]/95 backdrop-blur-xl shadow-xl shadow-black/30 transition-transform duration-200 ease-in-out md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-30 flex h-full w-64 flex-col justify-between py-6 border-r border-white/10 bg-datadenkt-navy-dark shadow-xl shadow-black/30 transition-transform duration-200 ease-in-out md:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-white/10">
-          <span className="text-lg font-semibold tracking-wide text-slate-100">DATADENKT</span>
-          <button
-            type="button"
-            className="md:hidden rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-slate-100 transition-colors"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Menu sluiten"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="flex h-14 shrink-0 items-center justify-between px-6 border-b border-white/10">
+            <span className="text-lg font-semibold tracking-wide text-datadenkt-white">DATADENKT</span>
+            <button
+              type="button"
+              className="md:hidden rounded-xl p-2 text-datadenkt-white/70 hover:bg-datadenkt-navy-card hover:text-datadenkt-white transition-all duration-200"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Menu sluiten"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
 
-        <nav className="flex-1 space-y-0.5 p-4 overflow-y-auto">
-          {SIDEBAR_ITEMS.filter((item) => {
-            if (item.path === '/dashboard/financien') return false
-            if (!(!item.feature || canSeeFeature(flags, item.feature, role === 'admin'))) return false
-            if (role !== 'admin' && moduleStatus[item.moduleName] === false) return false
-            return true
-          }).map((item) => {
-            const isActive = pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path))
-            const isActiveModule = moduleStatus[item.moduleName] !== false
-            return (
-              <div key={item.path} className="flex w-full items-center gap-2">
-                <Link
-                  href={item.path}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex flex-1 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 ease-in-out ${
-                    isActive
-                      ? 'bg-emerald-500/20 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] border border-emerald-500/30'
-                      : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                  }`}
+          <nav className="flex-1 space-y-0.5 p-4 overflow-y-auto">
+            {SIDEBAR_ITEMS.filter((item) => {
+              if (item.path === '/dashboard/financien') return false
+              if (!(!item.feature || canSeeFeature(flags, item.feature, role === 'admin'))) return false
+              if (role !== 'admin' && moduleStatus[item.moduleName] === false) return false
+              return true
+            }).map((item) => {
+              const isActive = pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path))
+              const isActiveModule = moduleStatus[item.moduleName] !== false
+              return (
+                <div key={item.path} className="flex w-full items-center gap-2">
+                  <Link
+                    href={item.path}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex flex-1 min-w-0 items-center gap-3 rounded-r-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 border-l-4 ${
+                      isActive
+                        ? 'border-datadenkt-orange bg-datadenkt-navy-card text-datadenkt-white'
+                        : 'border-transparent text-datadenkt-white/70 hover:bg-datadenkt-navy-card hover:text-datadenkt-white'
+                    }`}
+                  >
+                    <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                    </svg>
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                  {role === 'admin' && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        if (togglingModule !== item.moduleName) handleModuleToggle(item.moduleName)
+                      }}
+                      disabled={togglingModule === item.moduleName}
+                      title={isActiveModule ? 'Module actief' : 'Developer mode actief'}
+                      className={`shrink-0 min-w-[28px] h-7 rounded-lg px-1.5 flex items-center justify-center transition-all border ${
+                        isActiveModule ? 'bg-datadenkt-teal/20 text-datadenkt-teal border-datadenkt-teal/30' : 'bg-datadenkt-orange/20 text-datadenkt-orange border-datadenkt-orange/30'
+                      } ${togglingModule === item.moduleName ? 'opacity-60' : ''}`}
+                      aria-label={isActiveModule ? 'Module actief' : 'Developer mode actief'}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-current" />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+
+            {showFinance && (
+              <div className="pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => setFinanceOpen((o) => !o)}
+                  className="flex w-full items-center gap-3 rounded-r-xl px-3 py-2.5 text-left text-sm font-medium text-datadenkt-white/70 hover:bg-datadenkt-navy-card hover:text-datadenkt-white transition-all duration-200 border-l-4 border-transparent"
                 >
                   <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="truncate">{item.label}</span>
-                </Link>
+                  <span className="truncate flex-1">Financiën</span>
+                  {financeOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                </button>
+                {financeOpen && (
+                  <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2">
+                    {FINANCIEN_SUBITEMS.map((sub) => {
+                      const isSubActive = pathname === sub.path
+                      return (
+                        <Link
+                          key={sub.path}
+                          href={sub.path}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`block rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                            isSubActive ? 'bg-datadenkt-navy-card text-datadenkt-orange' : 'text-datadenkt-white/70 hover:text-datadenkt-white'
+                          }`}
+                        >
+                          {sub.label}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
                 {role === 'admin' && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      if (togglingModule !== item.moduleName) handleModuleToggle(item.moduleName)
-                    }}
-                    disabled={togglingModule === item.moduleName}
-                    title={isActiveModule ? 'Module actief' : 'Developer mode actief'}
-                    className={`shrink-0 min-w-[28px] h-7 rounded-lg px-1.5 flex items-center justify-center transition-all border ${
-                      isActiveModule ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                    } ${togglingModule === item.moduleName ? 'opacity-60' : ''}`}
-                    aria-label={isActiveModule ? 'Module actief' : 'Developer mode actief'}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-current" />
-                  </button>
+                  <div className="flex justify-end mt-0.5 mr-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        if (togglingModule !== 'financien') handleModuleToggle('financien')
+                      }}
+                      disabled={togglingModule === 'financien'}
+                      title={moduleStatus['financien'] !== false ? 'Module actief' : 'Developer mode actief'}
+                      className={`shrink-0 min-w-[28px] h-6 rounded-lg px-1.5 flex items-center justify-center border text-xs ${
+                        moduleStatus['financien'] !== false ? 'bg-datadenkt-teal/20 text-datadenkt-teal border-datadenkt-teal/30' : 'bg-datadenkt-orange/20 text-datadenkt-orange border-datadenkt-orange/30'
+                      }`}
+                      aria-label={moduleStatus['financien'] !== false ? 'Module actief' : 'Developer mode actief'}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    </button>
+                  </div>
                 )}
               </div>
-            )
-          })}
+            )}
+          </nav>
+        </div>
 
-          {showFinance && (
-            <div className="pt-0.5">
-              <button
-                type="button"
-                onClick={() => setFinanceOpen((o) => !o)}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-200"
-              >
-                <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="truncate flex-1">Financiën</span>
-                {financeOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
-              </button>
-              {financeOpen && (
-                <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2">
-                  {FINANCIEN_SUBITEMS.map((sub) => {
-                    const isSubActive = pathname === sub.path
-                    return (
-                      <Link
-                        key={sub.path}
-                        href={sub.path}
-                        onClick={() => setSidebarOpen(false)}
-                        className={`block rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                          isSubActive ? 'bg-emerald-500/20 text-emerald-300' : 'text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        {sub.label}
-                      </Link>
-                    )
-                  })}
-                </div>
-              )}
-              {role === 'admin' && (
-                <div className="flex justify-end mt-0.5 mr-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      if (togglingModule !== 'financien') handleModuleToggle('financien')
-                    }}
-                    disabled={togglingModule === 'financien'}
-                    title={moduleStatus['financien'] !== false ? 'Module actief' : 'Developer mode actief'}
-                    className={`shrink-0 min-w-[28px] h-6 rounded-lg px-1.5 flex items-center justify-center border text-xs ${
-                      moduleStatus['financien'] !== false ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                    }`}
-                    aria-label={moduleStatus['financien'] !== false ? 'Module actief' : 'Developer mode actief'}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {role === 'admin' && (
-            <div className="flex w-full items-center gap-2 mt-4 pt-4 border-t border-white/10">
-              <Link
-                href="/dashboard/admin"
-                onClick={() => setSidebarOpen(false)}
-                className={`flex flex-1 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 ${
-                  pathname === '/dashboard/admin' ? 'bg-emerald-500/20 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] border border-emerald-500/30' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <span className="truncate">Admin</span>
-              </Link>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault()
-                  if (togglingModule !== 'admin') handleModuleToggle('admin')
-                }}
-                disabled={togglingModule === 'admin'}
-                title={moduleStatus['admin'] !== false ? 'Module actief' : 'Developer mode actief'}
-                className={`shrink-0 min-w-[28px] h-7 rounded-lg px-1.5 flex items-center justify-center border ${
-                  moduleStatus['admin'] !== false ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                } ${togglingModule === 'admin' ? 'opacity-60' : ''}`}
-                aria-label={moduleStatus['admin'] !== false ? 'Module actief' : 'Developer mode actief'}
-              >
-                <span className="w-2 h-2 rounded-full bg-current" />
-              </button>
-            </div>
-          )}
-        </nav>
+        {role === 'admin' && (
+          <div className="flex w-full items-center gap-2 shrink-0 mt-4 pt-4 px-4 border-t border-white/10">
+            <Link
+              href="/dashboard/admin"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex flex-1 min-w-0 items-center gap-3 rounded-r-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 border-l-4 ${
+                pathname === '/dashboard/admin'
+                  ? 'border-datadenkt-orange bg-datadenkt-navy-card text-datadenkt-white'
+                  : 'border-transparent text-datadenkt-white/70 hover:bg-datadenkt-navy-card hover:text-datadenkt-white'
+              }`}
+            >
+              <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <span className="truncate">Admin</span>
+            </Link>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                if (togglingModule !== 'admin') handleModuleToggle('admin')
+              }}
+              disabled={togglingModule === 'admin'}
+              title={moduleStatus['admin'] !== false ? 'Module actief' : 'Developer mode actief'}
+              className={`shrink-0 min-w-[28px] h-7 rounded-lg px-1.5 flex items-center justify-center transition-all border ${
+                moduleStatus['admin'] !== false ? 'bg-datadenkt-teal/20 text-datadenkt-teal border-datadenkt-teal/30' : 'bg-datadenkt-orange/20 text-datadenkt-orange border-datadenkt-orange/30'
+              } ${togglingModule === 'admin' ? 'opacity-60' : ''}`}
+              aria-label={moduleStatus['admin'] !== false ? 'Module actief' : 'Developer mode actief'}
+            >
+              <span className="w-2 h-2 rounded-full bg-current" />
+            </button>
+          </div>
+        )}
       </aside>
 
       <div className="flex flex-1 flex-col min-w-0 pl-0 md:pl-64">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-[#111827]/80 backdrop-blur-xl px-4 md:px-6">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-datadenkt-navy/90 backdrop-blur-xl px-4 md:px-6">
           <div className="flex items-center gap-4 min-w-0">
             <button
               type="button"
-              className="md:hidden rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-slate-100 transition-colors"
+              className="md:hidden rounded-xl p-2 text-datadenkt-white/70 hover:bg-datadenkt-navy-card hover:text-datadenkt-white transition-all duration-200"
               onClick={() => setSidebarOpen(true)}
               aria-label="Menu openen"
             >
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
-            <p className="text-sm font-semibold text-slate-100 truncate">{greeting}</p>
-            <span className="text-slate-500 text-sm tabular-nums" suppressHydrationWarning>
+            <p className="text-sm font-semibold text-datadenkt-white truncate">{greeting}</p>
+            <span className="text-datadenkt-white/50 text-sm tabular-nums" suppressHydrationWarning>
               {mounted ? currentTime : '--:--'}
             </span>
           </div>
@@ -327,19 +330,19 @@ export function DashboardShell({
             <input
               type="search"
               placeholder="Zoeken..."
-              className="hidden sm:block w-40 md:w-52 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-all"
+              className="hidden sm:block w-40 md:w-52 rounded-xl border border-white/10 bg-datadenkt-navy-card px-3 py-2 text-sm text-datadenkt-white placeholder:text-datadenkt-white/50 focus:border-datadenkt-teal focus:outline-none focus:ring-2 focus:ring-datadenkt-teal/50 transition-all duration-200"
             />
-            <span className="text-xs text-slate-500 truncate max-w-[120px] md:max-w-[180px]" title={email}>
+            <span className="text-xs text-datadenkt-white/60 truncate max-w-[120px] md:max-w-[180px]" title={email}>
               {email}
             </span>
             {developerMode && (
-              <span className="text-xs text-amber-400/80 hidden sm:inline">Dev</span>
+              <span className="text-xs text-datadenkt-orange/90 hidden sm:inline">Dev</span>
             )}
-            <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-slate-300 font-medium ring-2 ring-emerald-500/30">
+            <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-datadenkt-navy-card text-datadenkt-white font-medium ring-2 ring-datadenkt-teal">
               {(profileName ?? email).slice(0, 1).toUpperCase()}
-              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-[#111827]" title="Online" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-datadenkt-teal ring-2 ring-datadenkt-navy" title="Online" />
             </span>
-            <span className={`hidden sm:inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${role === 'admin' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'}`}>
+            <span className={`hidden sm:inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${role === 'admin' ? 'bg-datadenkt-teal/20 text-datadenkt-teal' : 'bg-datadenkt-white/10 text-datadenkt-white/70'}`}>
               {role === 'admin' ? 'admin' : 'user'}
             </span>
           </div>

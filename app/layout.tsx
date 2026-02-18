@@ -1,3 +1,4 @@
+import './globals.css'
 import { Providers } from './providers'
 
 export default function RootLayout({
@@ -7,7 +8,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-datadenkt-navy text-datadenkt-white">
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -10,6 +10,16 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        datadenkt: {
+          navy: '#1e2b44',
+          'navy-dark': '#162136',
+          'navy-card': '#243557',
+          orange: '#f7931e',
+          teal: '#2ec4b6',
+          white: '#f4f6f8',
+        },
+      },
       keyframes: {
         'fade-in': {
           '0%': { opacity: '0' },

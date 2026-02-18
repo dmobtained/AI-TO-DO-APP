@@ -81,7 +81,7 @@ export default function InstellingenPage() {
   if (authLoading || !user) {
     return (
       <div className="mx-auto max-w-4xl">
-        <div className="h-8 w-48 rounded bg-slate-200 animate-pulse" />
+        <div className="h-8 w-48 rounded bg-datadenkt-white/10 animate-pulse" />
       </div>
     )
   }
@@ -90,61 +90,61 @@ export default function InstellingenPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <h1 className="text-2xl font-semibold text-slate-900">Instellingen</h1>
-      <p className="text-slate-500 text-sm mt-0.5">Accountgegevens</p>
+      <h1 className="text-2xl font-semibold text-datadenkt-white">Instellingen</h1>
+      <p className="text-datadenkt-white/70 text-sm mt-0.5">Accountgegevens</p>
 
-      <div className="mt-8 rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-6">
+      <div className="mt-8 card-primary p-6 space-y-6">
         <div>
-          <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Email</label>
-          <p className="text-slate-900">{user.email ?? '—'}</p>
+          <label className="block text-xs font-medium text-datadenkt-white/70 uppercase tracking-wide mb-1">Email</label>
+          <p className="text-datadenkt-white">{user.email ?? '—'}</p>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Rol</label>
-          <p className="text-slate-900">{role === 'ADMIN' ? 'admin' : 'user'}</p>
+          <label className="block text-xs font-medium text-datadenkt-white/70 uppercase tracking-wide mb-1">Rol</label>
+          <p className="text-datadenkt-white">{role === 'ADMIN' ? 'admin' : 'user'}</p>
         </div>
 
         {role === 'ADMIN' && (
-          <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+          <div className="flex items-center justify-between pt-2 border-t border-white/10">
             <div>
-              <p className="text-sm font-medium text-slate-700">Developer Mode</p>
-              <p className="text-xs text-slate-500 mt-0.5">Extra debug en admin tools</p>
+              <p className="text-sm font-medium text-datadenkt-white">Developer Mode</p>
+              <p className="text-xs text-datadenkt-white/70 mt-0.5">Extra debug en admin tools</p>
             </div>
             <button
               type="button"
               role="switch"
               aria-checked={developerMode}
               onClick={() => handleDeveloperModeToggle(!developerMode)}
-              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                developerMode ? 'bg-blue-600' : 'bg-slate-200'
+              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-datadenkt-teal focus:ring-offset-2 focus:ring-offset-datadenkt-navy ${
+                developerMode ? 'bg-datadenkt-teal' : 'bg-datadenkt-white/20'
               }`}
             >
-              <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition ${developerMode ? 'translate-x-5' : 'translate-x-1'}`} />
+              <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-datadenkt-white shadow ring-0 transition ${developerMode ? 'translate-x-5' : 'translate-x-1'}`} />
             </button>
           </div>
         )}
 
         {showEmailToggle && (
-          <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-            <label className="text-sm font-medium text-slate-700">E-mail koppeling aan</label>
+          <div className="flex items-center justify-between pt-2 border-t border-white/10">
+            <label className="text-sm font-medium text-datadenkt-white">E-mail koppeling aan</label>
             <button
               type="button"
               role="switch"
               aria-checked={emailEnabled}
               onClick={toggleEmail}
-              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                emailEnabled ? 'bg-blue-600' : 'bg-slate-200'
+              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-datadenkt-teal focus:ring-offset-2 focus:ring-offset-datadenkt-navy ${
+                emailEnabled ? 'bg-datadenkt-teal' : 'bg-datadenkt-white/20'
               }`}
             >
-              <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition ${emailEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+              <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-datadenkt-white shadow ring-0 transition ${emailEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
             </button>
           </div>
         )}
 
-        <div className="pt-4 border-t border-slate-200">
+        <div className="pt-4 border-t border-white/10">
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded-xl bg-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-300 transition-colors"
+            className="btn-accent px-4 py-2.5 text-sm"
           >
             Uitloggen
           </button>
@@ -153,23 +153,23 @@ export default function InstellingenPage() {
 
       {confirmModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={cancelDeveloperMode}>
-          <div className="rounded-xl bg-white p-6 shadow-xl max-w-sm w-full border border-slate-200" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-semibold text-slate-900 mb-2">Developer Mode</h3>
-            <p className="text-sm text-slate-600 mb-6">
+          <div className="card-primary p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-semibold text-datadenkt-white mb-2">Developer Mode</h3>
+            <p className="text-sm text-datadenkt-white/70 mb-6">
               Weet je zeker dat je Developer Mode wilt inschakelen?
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 type="button"
                 onClick={cancelDeveloperMode}
-                className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200"
+                className="rounded-xl bg-datadenkt-white/10 px-4 py-2 text-sm font-medium text-datadenkt-white hover:bg-datadenkt-white/20 transition-all duration-200"
               >
                 Annuleren
               </button>
               <button
                 type="button"
                 onClick={confirmDeveloperMode}
-                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                className="btn-primary px-4 py-2 text-sm"
               >
                 Inschakelen
               </button>

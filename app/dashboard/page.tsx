@@ -287,47 +287,47 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl animate-fade-in-up">
-      <h1 className="text-2xl font-semibold tracking-tight text-slate-100">Dashboard</h1>
-      <p className="text-slate-400 text-sm mt-1">Overzicht van vandaag en deze maand</p>
+      <h1 className="text-2xl font-semibold tracking-tight text-datadenkt-white">Dashboard</h1>
+      <p className="text-datadenkt-white/70 text-sm mt-1">Overzicht van vandaag en deze maand</p>
 
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <OverviewCard
           title="Open taken vandaag"
           value={loading ? '—' : openTasksToday}
           icon={<LayoutDashboard className="h-6 w-6" />}
-          accent="blue"
+          accent="teal"
           delay={0}
         />
         <OverviewCard
           title="Vandaag"
           value={loading ? '—' : focusTasks.length}
           icon={<Calendar className="h-6 w-6" />}
-          accent="emerald"
+          accent="orange"
           delay={50}
         />
         <OverviewCard
           title="Maand Cashflow"
           value={loading ? '—' : `€ ${freeToSpend.toFixed(2)}`}
           icon={<TrendingUp className="h-6 w-6" />}
-          accent={freeToSpend >= 0 ? 'emerald' : 'red'}
+          accent={freeToSpend >= 0 ? 'teal' : 'red'}
           delay={100}
         />
         <OverviewCard
           title="AI Suggesties"
           value={daynoteStatus === 'success' ? 'Klaar' : loading ? '—' : 'Genereer'}
           icon={<Sparkles className="h-6 w-6" />}
-          accent="slate"
+          accent="muted"
           delay={150}
         />
       </div>
 
-      <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/30 transition-all duration-200 hover:border-white/20">
-        <h2 className="text-lg font-semibold text-slate-100 mb-4">Dagnotitie</h2>
+      <div className="mt-8 card-primary p-6">
+        <h2 className="text-lg font-semibold text-datadenkt-white mb-4">Dagnotitie</h2>
         <button
           type="button"
           onClick={handleGenerateDaynote}
           disabled={daynoteStatus === 'loading'}
-          className="w-auto rounded-xl bg-emerald-500/20 border border-emerald-500/30 px-4 py-2.5 text-sm font-medium text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center gap-2 transition-all duration-200"
+          className="btn-accent w-auto px-4 py-2.5 text-sm disabled:opacity-50 disabled:pointer-events-none inline-flex items-center gap-2"
         >
           {daynoteStatus === 'loading' && (
             <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -345,7 +345,7 @@ export default function DashboardPage() {
             <p className="text-xs text-slate-500 mb-2">
               {new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
-            <pre className="text-sm text-slate-300 whitespace-pre-line font-sans bg-white/5 p-4 rounded-xl border border-white/10">
+            <pre className="text-sm text-datadenkt-white/90 whitespace-pre-line font-sans bg-datadenkt-navy-dark p-4 rounded-xl border border-white/10">
               {daynote}
             </pre>
             <button
@@ -354,7 +354,7 @@ export default function DashboardPage() {
                 void navigator.clipboard.writeText(daynote)
                 toast('Gekopieerd naar klembord.')
               }}
-              className="mt-2 rounded-xl bg-emerald-500/20 text-emerald-300 px-3 py-1.5 text-sm hover:bg-emerald-500/30 transition-colors duration-200"
+              className="mt-2 btn-accent px-3 py-1.5 text-sm"
             >
               Kopiëren
             </button>
@@ -364,9 +364,9 @@ export default function DashboardPage() {
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {canSee('dashboard_tasks_list') && (
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl shadow-black/30 overflow-hidden transition-all duration-200 hover:scale-[1.01] hover:border-white/20">
+          <div className="card-primary overflow-hidden hover:scale-[1.02]">
             <div className="px-6 py-4 border-b border-white/10">
-              <h2 className="text-lg font-semibold text-slate-100">Open taken</h2>
+              <h2 className="text-lg font-semibold text-datadenkt-white">Open taken</h2>
             </div>
             {loading ? (
               <ul className="divide-y divide-white/5">
@@ -377,7 +377,7 @@ export default function DashboardPage() {
                 ))}
               </ul>
             ) : openTasks.length === 0 ? (
-              <div className="px-6 py-8 text-center text-slate-500 text-sm">Geen open taken.</div>
+              <div className="px-6 py-8 text-center text-datadenkt-white/60 text-sm">Geen open taken.</div>
             ) : (
               <ul className="divide-y divide-white/5">
                 {openTasks.map((task) => (
@@ -385,20 +385,20 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => handleToggleTask(task)}
-                      className="shrink-0 w-5 h-5 rounded-full border-2 border-white/30 bg-transparent flex items-center justify-center hover:border-emerald-500 transition-colors duration-200"
+                      className="shrink-0 w-5 h-5 rounded-full border-2 border-datadenkt-white/30 bg-transparent flex items-center justify-center hover:border-datadenkt-teal focus:ring-2 focus:ring-datadenkt-teal transition-all duration-200"
                       aria-label="Afvinken"
                     >
                       {task.status === 'DONE' && (
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span className="w-2 h-2 rounded-full bg-datadenkt-teal" />
                       )}
                     </button>
-                    <Link href="/dashboard/taken" className="flex-1 min-w-0 truncate text-sm font-medium text-slate-200 hover:text-emerald-400 transition-colors duration-200">
+                    <Link href="/dashboard/taken" className="flex-1 min-w-0 truncate text-sm font-medium text-datadenkt-white/90 hover:text-datadenkt-teal transition-colors duration-200">
                       {task.title}
                     </Link>
                     <button
                       type="button"
                       onClick={() => handleDeleteTask(task.id, task.user_id)}
-                      className="shrink-0 text-xs text-slate-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                      className="shrink-0 text-xs text-datadenkt-white/60 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       Verwijderen
                     </button>
@@ -410,9 +410,9 @@ export default function DashboardPage() {
         )}
 
         {canSee('focus_today') && (
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl shadow-black/30 overflow-hidden transition-all duration-200 hover:scale-[1.01] hover:border-white/20">
+          <div className="card-primary overflow-hidden hover:scale-[1.02]">
             <div className="px-6 py-4 border-b border-white/10">
-              <h2 className="text-lg font-semibold text-slate-100">Focusblok vandaag</h2>
+              <h2 className="text-lg font-semibold text-datadenkt-white">Focusblok vandaag</h2>
             </div>
             {loading ? (
               <ul className="divide-y divide-white/5">
@@ -423,7 +423,7 @@ export default function DashboardPage() {
                 ))}
               </ul>
             ) : focusTasks.length === 0 ? (
-              <div className="px-6 py-8 text-center text-slate-500 text-sm">Geen prioriteiten.</div>
+              <div className="px-6 py-8 text-center text-datadenkt-white/60 text-sm">Geen prioriteiten.</div>
             ) : (
               <ul className="divide-y divide-white/5">
                 {focusTasks.map((task) => (
@@ -431,18 +431,18 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => handleToggleTask(task)}
-                      className="shrink-0 w-5 h-5 rounded-full border-2 border-white/30 bg-transparent flex items-center justify-center hover:border-emerald-500 transition-colors duration-200"
+                      className="shrink-0 w-5 h-5 rounded-full border-2 border-datadenkt-white/30 bg-transparent flex items-center justify-center hover:border-datadenkt-teal focus:ring-2 focus:ring-datadenkt-teal transition-all duration-200"
                       aria-label="Markeer als gedaan"
                     >
                       {task.status === 'DONE' && (
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span className="w-2 h-2 rounded-full bg-datadenkt-teal" />
                       )}
                     </button>
-                    <span className="flex-1 min-w-0 truncate text-sm font-medium text-slate-200">{task.title}</span>
+                    <span className="flex-1 min-w-0 truncate text-sm font-medium text-datadenkt-white/90">{task.title}</span>
                     <button
                       type="button"
                       onClick={() => handleDeleteTask(task.id, task.user_id)}
-                      className="shrink-0 text-xs text-slate-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                      className="shrink-0 text-xs text-datadenkt-white/60 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       Verwijderen
                     </button>
@@ -475,7 +475,20 @@ function DashboardCashflowWidget() {
   useEffect(() => {
     let mounted = true
     async function run() {
-      const { data: { user } } = await supabase.auth.getUser()
+      // #region agent log
+      fetch('http://127.0.0.1:7313/ingest/a8f531f6-1245-4c64-950c-ccbe6704ebe2',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'27363b'},body:JSON.stringify({sessionId:'27363b',location:'dashboard/page.tsx:DashboardCashflowWidget',message:'before getUser',data:{},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+      // #endregion
+      let user: { id: string } | null = null
+      try {
+        const res = await supabase.auth.getUser()
+        user = res?.data?.user ?? null
+      } catch (e) {
+        // #region agent log
+        fetch('http://127.0.0.1:7313/ingest/a8f531f6-1245-4c64-950c-ccbe6704ebe2',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'27363b'},body:JSON.stringify({sessionId:'27363b',location:'dashboard/page.tsx:DashboardCashflowWidget',message:'getUser rejected',data:{name:e instanceof Error?e.name:'',isAbort:e instanceof Error&&e.name==='AbortError'},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+        // #endregion
+        if (!mounted) return
+        return
+      }
       if (!user || !mounted) return
       const now = new Date()
       const start = new Date(now)
@@ -517,12 +530,12 @@ function DashboardCashflowWidget() {
   }, [])
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/30 transition-all duration-200 hover:scale-[1.02] hover:border-white/20">
-      <h2 className="text-lg font-semibold text-slate-100 mb-2">Cashflow voorspelling</h2>
-      {status === 'loading' && <p className="text-slate-500 text-sm">Laden…</p>}
-      {status === 'nodata' && <p className="text-slate-500 text-sm">Nog onvoldoende data</p>}
+    <div className="card-primary p-6 hover:scale-[1.02]">
+      <h2 className="text-lg font-semibold text-datadenkt-white mb-2">Cashflow voorspelling</h2>
+      {status === 'loading' && <p className="text-datadenkt-white/60 text-sm">Laden…</p>}
+      {status === 'nodata' && <p className="text-datadenkt-white/60 text-sm">Nog onvoldoende data</p>}
       {status === 'data' && (
-        <div className="space-y-1 text-sm text-slate-300">
+        <div className="space-y-1 text-sm text-datadenkt-teal">
           <p>7 dagen: € {Number(forecast7).toFixed(2)}</p>
           <p>30 dagen: € {Number(forecast30).toFixed(2)}</p>
         </div>
@@ -584,12 +597,12 @@ function DashboardWarningsWidget() {
   }, [])
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/30 transition-all duration-200 hover:scale-[1.02] hover:border-white/20">
-      <h2 className="text-lg font-semibold text-slate-100 mb-2">Financiële waarschuwingen</h2>
-      {loading && <p className="text-slate-500 text-sm">Laden…</p>}
-      {!loading && warnings.length === 0 && <p className="text-slate-500 text-sm">Geen waarschuwingen</p>}
+    <div className="card-primary p-6 hover:scale-[1.02]">
+      <h2 className="text-lg font-semibold text-datadenkt-white mb-2">Financiële waarschuwingen</h2>
+      {loading && <p className="text-datadenkt-white/60 text-sm">Laden…</p>}
+      {!loading && warnings.length === 0 && <p className="text-datadenkt-white/60 text-sm">Geen waarschuwingen</p>}
       {!loading && warnings.length > 0 && (
-        <ul className="list-disc list-inside text-sm text-amber-400/90 space-y-1">
+        <ul className="list-disc list-inside text-sm text-datadenkt-orange space-y-1">
           {warnings.map((w, i) => (
             <li key={i}>{w}</li>
           ))}
@@ -635,11 +648,11 @@ function DashboardProductivityWidget() {
   }, [])
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/30 transition-all duration-200 hover:scale-[1.02] hover:border-white/20">
-      <h2 className="text-lg font-semibold text-slate-100 mb-2">Productiviteitsmeter</h2>
-      {loading && <p className="text-slate-500 text-sm">Laden…</p>}
+    <div className="card-primary p-6 hover:scale-[1.02]">
+      <h2 className="text-lg font-semibold text-datadenkt-white mb-2">Productiviteitsmeter</h2>
+      {loading && <p className="text-datadenkt-white/60 text-sm">Laden…</p>}
       {!loading && (
-        <p className="text-slate-300">
+        <p className="text-datadenkt-white/90">
           {ratio != null ? `${ratio}% afgerond (deze week)` : '—'} {trend && ` · ${trend}`}
         </p>
       )}
@@ -717,15 +730,15 @@ function DashboardDecisionLogWidget() {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/30 transition-all duration-200 hover:scale-[1.02] hover:border-white/20">
-      <h2 className="text-lg font-semibold text-slate-100 mb-3">Beslissingslogboek</h2>
+    <div className="card-primary p-6 hover:scale-[1.02]">
+      <h2 className="text-lg font-semibold text-datadenkt-white mb-3">Beslissingslogboek</h2>
       <form onSubmit={handleAdd} className="space-y-2 mb-4">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Beslissing"
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 disabled:opacity-50"
+          className="w-full rounded-xl border border-white/10 bg-datadenkt-navy-dark px-3 py-2 text-sm text-datadenkt-white placeholder:text-datadenkt-white/50 focus:border-datadenkt-teal focus:outline-none focus:ring-2 focus:ring-datadenkt-teal/50 disabled:opacity-50 transition-all duration-200"
           disabled={adding}
         />
         <input
@@ -733,21 +746,21 @@ function DashboardDecisionLogWidget() {
           value={why}
           onChange={(e) => setWhy(e.target.value)}
           placeholder="Waarom (optioneel)"
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 disabled:opacity-50"
+          className="w-full rounded-xl border border-white/10 bg-datadenkt-navy-dark px-3 py-2 text-sm text-datadenkt-white placeholder:text-datadenkt-white/50 focus:border-datadenkt-teal focus:outline-none focus:ring-2 focus:ring-datadenkt-teal/50 disabled:opacity-50 transition-all duration-200"
           disabled={adding}
         />
-        <button type="submit" disabled={adding || !title.trim()} className="rounded-xl bg-emerald-500/20 border border-emerald-500/30 px-3 py-1.5 text-sm text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-50 transition-colors duration-200">
+        <button type="submit" disabled={adding || !title.trim()} className="btn-accent px-3 py-1.5 text-sm disabled:opacity-50">
           {adding ? 'Bezig…' : 'Toevoegen'}
         </button>
       </form>
-      {loading && <p className="text-slate-500 text-sm">Laden…</p>}
-      {!loading && decisions.length === 0 && <p className="text-slate-500 text-sm">Geen beslissingen</p>}
+      {loading && <p className="text-datadenkt-white/60 text-sm">Laden…</p>}
+      {!loading && decisions.length === 0 && <p className="text-datadenkt-white/60 text-sm">Geen beslissingen</p>}
       {!loading && decisions.length > 0 && (
         <ul className="space-y-1 text-sm">
           {decisions.map((d) => (
             <li key={d.id} className="flex items-center justify-between gap-2">
-              <span className="truncate text-slate-300">{d.title.replace(/^\[DECISION\]\s*/, '')}</span>
-              <button type="button" onClick={() => handleDelete(d.id, d.user_id)} className="text-slate-500 hover:text-red-400 shrink-0 transition-colors">Verwijderen</button>
+              <span className="truncate text-datadenkt-white/90">{d.title.replace(/^\[DECISION\]\s*/, '')}</span>
+              <button type="button" onClick={() => handleDelete(d.id, d.user_id)} className="text-datadenkt-white/60 hover:text-red-400 shrink-0 transition-colors">Verwijderen</button>
             </li>
           ))}
         </ul>

@@ -3,20 +3,55 @@
 @tailwind utilities;
 
 :root {
-  --bg-base: #0f172a;
-  --bg-elevated: #111827;
-  --accent: #10b981;
-  --accent-blue: #3b82f6;
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --text-primary: #f8fafc;
-  --text-muted: #94a3b8;
+  --dd-navy: #1e2b44;
+  --dd-navy-dark: #162136;
+  --dd-navy-card: #243557;
+  --dd-orange: #f7931e;
+  --dd-teal: #2ec4b6;
+  --dd-white: #f4f6f8;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  background: var(--dd-navy);
+  color: var(--dd-white);
+  @apply antialiased;
 }
 
-body.dark-dashboard {
-  background: var(--bg-base);
-  color: var(--text-primary);
+.text-secondary {
+  opacity: 0.7;
+}
+
+@layer components {
+  .card-primary {
+    @apply rounded-2xl shadow-xl shadow-black/30 transition-all duration-200;
+    background: var(--dd-navy-card);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .card-primary:hover {
+    @apply hover:scale-[1.02];
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .card-dark {
+    @apply rounded-2xl shadow-xl shadow-black/30 transition-all duration-200;
+    background: var(--dd-navy-dark);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .btn-primary {
+    background: var(--dd-orange);
+    @apply text-white rounded-xl font-medium shadow-lg transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#2ec4b6] focus:ring-offset-2 focus:ring-offset-[#1e2b44];
+    box-shadow: 0 10px 15px -3px rgba(247, 147, 30, 0.2);
+  }
+  .btn-primary:hover {
+    filter: brightness(1.08);
+  }
+
+  .btn-accent {
+    background: var(--dd-teal);
+    @apply text-white rounded-xl font-medium shadow-lg transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#2ec4b6] focus:ring-offset-2 focus:ring-offset-[#1e2b44];
+  }
+  .btn-accent:hover {
+    filter: brightness(1.08);
+  }
 }
