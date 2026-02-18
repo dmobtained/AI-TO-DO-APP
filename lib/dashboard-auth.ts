@@ -1,0 +1,101 @@
+import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import {
+  buildFeatureFlags,
+  defaultFeatureFlags,
+  type FeatureFlags,
+  type RawModuleRow,
+} from '@/lib/feature-flags'
+
+export type ModuleStatus = Record<string, boolean>
+
+export type DashboardAuthResult = {
+  session: { user: { id: string; email?: string; user_metadata?: Record<string, unknown> } } | null
+  role: 'admin' | 'user'
+  flags: FeatureFlags
+  profileEmail: string | null
+  profileName: string | null
+  moduleStatus: ModuleStatus
+}
+
+/**
+ * Server-only: get session, role (metadata + profiles fallback), and feature flags for dashboard layout.
+ * One query for session, one for profile, one for modules (when admin client available).
+ */
+export async function getDashboardAuth(): Promise<DashboardAuthResult> {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) {
+    return {
+      session: null,
+      role: 'user',
+      flags: defaultFeatureFlags(),
+      profileEmail: null,
+      profileName: null,
+      moduleStatus: {},
+    }
+  }
+
+  const metaRole = session.user.user_metadata?.role
+  const roleFromMeta = typeof metaRole === 'string' && metaRole.toUpperCase() === 'ADMIN' ? 'admin' : 'user'
+
+  let role: 'admin' | 'user' = roleFromMeta
+  let profileEmail: string | null = session.user.email ?? null
+  const profileName: string | null = (session.user.user_metadata?.full_name as string) ?? (session.user.user_metadata?.name as string) ?? null
+
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, email')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    if (profile) {
+      if (roleFromMeta !== 'admin') role = profile.role === 'ADMIN' ? 'admin' : 'user'
+      if (profile.email != null) profileEmail = profile.email
+    }
+  } catch {
+    // profiles table missing or RLS: keep role from metadata
+  }
+
+  let flags = defaultFeatureFlags()
+  const moduleStatus: ModuleStatus = {}
+  const client = supabaseAdmin ?? supabase
+  try {
+    const { data: rows } = await client
+      .from('modules')
+      .select('id, name, slug, is_active, enabled, status, order_index, position')
+    const raw = (rows ?? []) as RawModuleRow[]
+    flags = buildFeatureFlags(raw)
+    const nameToFeatureKey: Record<string, import('@/lib/feature-flags').FeatureKey> = {
+      taken: 'dashboard_tasks_list',
+      financien: 'finance_module',
+      email: 'email_module',
+    }
+    raw.forEach((r) => {
+      if (r.name != null) {
+        moduleStatus[r.name] = r.is_active === true
+        const fk = nameToFeatureKey[r.name]
+        if (fk) flags[fk] = r.is_active === true
+      }
+    })
+    if (Object.keys(moduleStatus).length === 0) {
+      ['dashboard', 'taken', 'financien', 'email', 'instellingen', 'admin'].forEach((name) => {
+        moduleStatus[name] = true
+      })
+    }
+  } catch {
+    ['dashboard', 'taken', 'financien', 'email', 'instellingen', 'admin'].forEach((name) => {
+      moduleStatus[name] = true
+    })
+  }
+
+  return {
+    session: { user: { id: session.user.id, email: session.user.email ?? undefined, user_metadata: session.user.user_metadata } },
+    role,
+    flags,
+    profileEmail,
+    profileName,
+    moduleStatus,
+  }
+}

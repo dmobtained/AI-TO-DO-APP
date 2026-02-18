@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum IngestionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  OPEN
+  DONE
+}
+
+enum WebhookJobStatus {
+  PENDING
+  SENT
+  COMPLETED
+  FAILED
+}
+
+model Ingestion {
+  id        String          @id @default(cuid())
+  rawText   String
+  status    IngestionStatus @default(PENDING)
+  requestId String          @unique
+  userId    String?
+  createdAt DateTime        @default(now())
+
+  summary    Summary?
+  tasks      Task[]
+  webhookJob WebhookJob?
+
+  @@index([userId])
+}
+
+model Summary {
+  id          String    @id @default(cuid())
+  ingestion   Ingestion @relation(fields: [ingestionId], references: [id])
+  ingestionId String    @unique
+
+  summaryText String
+  copyText    String
+}
+
+model Task {
+  id          String      @id @default(cuid())
+  ingestion   Ingestion   @relation(fields: [ingestionId], references: [id])
+  ingestionId String
+  userId      String?
+
+  title       String
+  details     String?
+  priority    TaskPriority
+  dueDate     DateTime?
+  tags        String[]
+  status      TaskStatus  @default(OPEN)
+  externalId  String      @unique
+  order       Int
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([ingestionId])
+  @@index([userId])
+}
+
+model WebhookJob {
+  jobId       String           @id
+  ingestion   Ingestion        @relation(fields: [ingestionId], references: [id])
+  ingestionId String           @unique
+
+  status      WebhookJobStatus @default(PENDING)
+  attempts    Int              @default(0)
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
