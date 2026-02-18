@@ -1,6 +1,12 @@
 import './globals.css'
 import { Providers } from './providers'
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -10,7 +16,7 @@ export default function RootLayout({
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
   const supabaseScript = `window.__SUPABASE_ENV__={url:${JSON.stringify(supabaseUrl)},key:${JSON.stringify(supabaseAnonKey)}};`
   return (
-    <html lang="en">
+    <html lang="nl">
       <body className="bg-datadenkt-navy text-datadenkt-white">
         <script dangerouslySetInnerHTML={{ __html: supabaseScript }} />
         <Providers>{children}</Providers>
