@@ -13,11 +13,12 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json().catch(() => ({}))
-  const updates: { stage?: string; title?: string; notes?: string; updated_at?: string } = {}
+  const updates: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  }
   if (body.stage && ['lead', 'gesprek', 'deal'].includes(body.stage)) updates.stage = body.stage
   if (body.title !== undefined) updates.title = String(body.title).trim() || ''
-  if (body.notes !== undefined) updates.notes = body.notes == null ? null : String(body.notes).trim()
-  updates.updated_at = new Date().toISOString()
+  if (body.notes !== undefined) updates.notes = body.notes == null ? '' : String(body.notes).trim()
 
   const { data: row, error } = await supabase
     .from('leads')
