@@ -66,17 +66,17 @@ export function AppShell({
 
   if (!session) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0f1115]">
+      <div className="flex h-screen items-center justify-center bg-[#f4f6f8]">
         <div className="flex animate-pulse flex-col items-center gap-3">
-          <div className="h-8 w-48 rounded-xl bg-white/10" />
-          <div className="h-4 w-32 rounded-xl bg-white/10" />
+          <div className="h-8 w-48 rounded-xl bg-slate-200" />
+          <div className="h-4 w-32 rounded-xl bg-slate-200" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex h-screen bg-[#0f1115] text-white antialiased">
+    <div className="flex h-screen bg-[#f4f6f8] text-[#0f172a] antialiased">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm md:hidden"
@@ -86,12 +86,12 @@ export function AppShell({
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-30 flex h-full w-60 flex-col border-r border-white/5 bg-[#171a21] shadow-lg transition-transform duration-200 ease-in-out md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-30 flex h-full w-60 flex-col border-r border-white/10 bg-[#111827] shadow-lg transition-transform duration-200 ease-in-out md:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         <div className="flex flex-1 flex-col min-h-0">
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/5 px-4">
+          <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 px-4">
             <span className="text-lg font-semibold tracking-wide text-white">DATADENKT</span>
             <button
               type="button"
@@ -114,12 +114,12 @@ export function AppShell({
                   key={item.path}
                   href={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all ${
+                  className={`flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-white transition-all ${
                     isAdminItem ? 'opacity-75' : ''
                   } ${
                     isActive
-                      ? 'bg-white/10 text-white'
-                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                      ? 'bg-white/10'
+                      : 'hover:bg-white/5'
                   }`}
                 >
                   <Icon className="h-5 w-5 shrink-0" />
@@ -132,40 +132,40 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col pl-0 md:pl-60">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-white/5 bg-[#0f1115]/90 px-4 backdrop-blur-xl md:px-6">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-[#e5e7eb] bg-white px-4 shadow-sm md:px-6">
           <div className="flex min-w-0 items-center gap-4">
             <button
               type="button"
-              className="rounded-xl p-2 text-white/70 hover:bg-white/5 hover:text-white md:hidden"
+              className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 md:hidden"
               onClick={() => setSidebarOpen(true)}
               aria-label="Menu openen"
             >
               <Menu className="h-6 w-6" />
             </button>
             {pathname !== '/dashboard' && (
-              <p className="truncate text-sm font-semibold text-white">{displayName ? `Welkom, ${displayName}` : 'Welkom'}</p>
+              <p className="truncate text-sm font-semibold text-slate-900">{displayName ? `Welkom, ${displayName}` : 'Welkom'}</p>
             )}
-            <span className="tabular-nums text-sm text-white/50" suppressHydrationWarning>
+            <span className="tabular-nums text-sm text-slate-500" suppressHydrationWarning>
               {mounted ? currentTime : '--:--'}
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-3">
-            <span className="max-w-[120px] truncate text-xs text-white/60 md:max-w-[180px]" title={email}>
+            <span className="max-w-[120px] truncate text-xs text-slate-500 md:max-w-[180px]" title={email}>
               {email}
             </span>
-            <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#171a21] font-medium text-white ring-2 ring-[#3b82f6]">
+            <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2563eb] font-medium text-white">
               {(displayName ?? email).slice(0, 1).toUpperCase()}
             </span>
             <span
-              className={`hidden rounded-lg px-2 py-0.5 text-xs font-medium sm:inline-flex ${
-                role === 'admin' ? 'bg-[#3b82f6]/20 text-[#3b82f6]' : 'bg-white/10 text-white/70'
+              className={`hidden rounded-lg border px-2 py-0.5 text-xs font-medium sm:inline-flex ${
+                role === 'admin' ? 'border-[#2563eb]/30 bg-[#2563eb]/10 text-[#2563eb]' : 'border-slate-200 bg-slate-50 text-slate-600'
               }`}
             >
               {role === 'admin' ? 'admin' : 'user'}
             </span>
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-6 md:p-8">
+        <main className="flex-1 overflow-auto bg-[#f4f6f8] p-6 md:p-8">
           <DashboardProvider flags={flags} role={role} profileName={displayName ?? profileEmail ?? session?.user.email ?? null}>
             <div className="animate-fade-in">{children}</div>
           </DashboardProvider>

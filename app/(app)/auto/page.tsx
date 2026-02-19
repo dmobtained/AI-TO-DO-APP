@@ -2,31 +2,25 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
-import { Car, Fuel, Wrench, AlertCircle } from 'lucide-react'
+import { StatCard } from '@/components/ui/StatCard'
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { PageContainer } from '@/components/ui/PageContainer'
+import { Fuel, Wrench, AlertCircle } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export default function AutoPage() {
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <h1 className="text-2xl font-semibold text-white">Auto</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-6">
-          <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Totale kosten dit jaar</p>
-          <p className="text-2xl font-bold text-white mt-1">€ —</p>
-        </Card>
-        <Card className="p-6">
-          <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Kosten per km</p>
-          <p className="text-2xl font-bold text-white mt-1">€ —</p>
-        </Card>
-        <Card className="p-6">
-          <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Aanschafwaarde</p>
-          <p className="text-2xl font-bold text-white mt-1">€ —</p>
-        </Card>
-        <Card className="p-6">
-          <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Huidige waarde</p>
-          <p className="text-2xl font-bold text-white mt-1">€ —</p>
-        </Card>
+    <PageContainer>
+      <SectionHeader title="Auto" subtitle="Kosten en onderhoud" />
+
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Totale kosten dit jaar" value="€ —" />
+        <StatCard title="Kosten per km" value="€ —" />
+        <StatCard title="Aanschafwaarde" value="€ —" />
+        <StatCard title="Huidige waarde" value="€ —" />
       </div>
-      <Card className="p-6">
+
+      <Card className="mt-8 p-6">
         <Tabs defaultValue="tank">
           <TabsList>
             <TabsTrigger value="tank">Tankbeurten</TabsTrigger>
@@ -34,22 +28,16 @@ export default function AutoPage() {
             <TabsTrigger value="reparaties">Reparaties</TabsTrigger>
           </TabsList>
           <TabsContent value="tank">
-            <div className="flex items-center gap-2 text-white/70 text-sm py-4">
-              <Fuel className="h-5 w-5" /> Geen tankbeurten geregistreerd. + Toevoegen (placeholder).
-            </div>
+            <EmptyState icon={Fuel} title="Geen tankbeurten" description="Nog geen tankbeurten geregistreerd. Voeg een tankbeurt toe (placeholder)." />
           </TabsContent>
           <TabsContent value="onderhoud">
-            <div className="flex items-center gap-2 text-white/70 text-sm py-4">
-              <Wrench className="h-5 w-5" /> Geen onderhoud geregistreerd. + Toevoegen (placeholder).
-            </div>
+            <EmptyState icon={Wrench} title="Geen onderhoud" description="Nog geen onderhoud geregistreerd. Voeg onderhoud toe (placeholder)." />
           </TabsContent>
           <TabsContent value="reparaties">
-            <div className="flex items-center gap-2 text-white/70 text-sm py-4">
-              <AlertCircle className="h-5 w-5" /> Geen reparaties geregistreerd. + Toevoegen (placeholder).
-            </div>
+            <EmptyState icon={AlertCircle} title="Geen reparaties" description="Nog geen reparaties geregistreerd. Voeg een reparatie toe (placeholder)." />
           </TabsContent>
         </Tabs>
       </Card>
-    </div>
+    </PageContainer>
   )
 }

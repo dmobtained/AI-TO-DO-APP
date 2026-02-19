@@ -43,7 +43,7 @@ export function TabsList({ className = '', children, ...props }: React.HTMLAttri
   return (
     <div
       role="tablist"
-      className={`flex flex-wrap gap-1 rounded-xl border border-white/5 bg-white/5 p-1 ${className}`}
+      className={`flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1 ${className}`}
       {...props}
     >
       {children}
@@ -67,7 +67,7 @@ export function TabsTrigger({
       aria-selected={isActive}
       onClick={() => ctx.onValueChange(value)}
       className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-        isActive ? 'bg-white/10 text-white' : 'text-white/70 hover:text-white hover:bg-white/5'
+        isActive ? 'bg-blue-50 text-[#2563eb]' : 'text-slate-500 hover:text-slate-800 hover:bg-white'
       } ${className}`}
       {...props}
     >

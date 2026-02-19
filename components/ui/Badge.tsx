@@ -1,11 +1,12 @@
 'use client'
 
-type BadgeVariant = 'success' | 'danger' | 'neutral'
+type BadgeVariant = 'success' | 'danger' | 'warning' | 'neutral'
 
 const variantClass: Record<BadgeVariant, string> = {
-  success: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  danger: 'bg-red-500/20 text-red-400 border-red-500/30',
-  neutral: 'bg-white/10 text-white/80 border-white/10',
+  success: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  danger: 'bg-red-50 text-red-600 border-red-200',
+  warning: 'bg-amber-50 text-amber-600 border-amber-200',
+  neutral: 'bg-slate-100 text-slate-600 border-slate-200',
 }
 
 export function Badge({

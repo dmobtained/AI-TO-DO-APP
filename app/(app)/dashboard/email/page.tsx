@@ -111,19 +111,19 @@ export default function DashboardEmailPage() {
   return (
     <FeatureGuard feature="email_module">
       <div className="mx-auto max-w-6xl">
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">E-mail</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Inbox en AI-antwoord</p>
+        <h1 className="text-xl font-semibold text-slate-900">E-mail</h1>
+        <p className="text-sm text-slate-500 mt-0.5">Inbox en AI-antwoord</p>
 
         {isLocked && (
-          <div className="mt-4 rounded-lg bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 px-4 py-2 text-center text-sm text-amber-800 dark:text-amber-200">
+          <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2 text-center text-sm text-amber-800">
             Developer mode actief: inbox-interactie uitgeschakeld voor andere gebruikers.
           </div>
         )}
 
-        <div className="mt-6 flex rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm overflow-hidden min-h-[560px]">
-          <aside className="w-1/3 border-r border-slate-200 dark:border-slate-700 flex flex-col min-w-0">
-            <div className="shrink-0 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Inbox</h2>
+        <div className="mt-6 flex gap-0 rounded-2xl border border-[#e5e7eb] bg-white shadow-sm overflow-hidden min-h-[560px]">
+          <aside className="w-80 shrink-0 border-r border-[#e5e7eb] flex flex-col min-w-0 bg-white">
+            <div className="shrink-0 px-4 py-3 border-b border-[#e5e7eb]">
+              <h2 className="text-sm font-semibold text-slate-900">Inbox</h2>
             </div>
             {loading ? (
               <div className="flex-1 flex items-center justify-center p-4">
@@ -141,7 +141,7 @@ export default function DashboardEmailPage() {
               />
             )}
           </aside>
-          <main className="w-2/3 p-6 overflow-auto flex flex-col min-w-0">
+          <main className="flex-1 p-6 overflow-auto flex flex-col min-w-0 bg-white">
             <EmailDetail
               email={selectedEmail}
               draft={draft}

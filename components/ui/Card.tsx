@@ -3,7 +3,7 @@
 import { forwardRef } from 'react'
 
 const cardClass =
-  'rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 bg-[#171a21] border border-white/5'
+  'rounded-2xl bg-white shadow-sm border border-[#e5e7eb] transition-all duration-200 hover:shadow-md'
 
 export const Card = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className = '', ...props }, ref) => (
@@ -13,11 +13,11 @@ export const Card = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEleme
 Card.displayName = 'Card'
 
 export function CardHeader({ className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={`px-6 py-4 border-b border-white/5 ${className}`} {...props} />
+  return <div className={`px-6 py-4 border-b border-[#e5e7eb] ${className}`} {...props} />
 }
 
 export function CardTitle({ className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={`text-lg font-semibold text-white ${className}`} {...props} />
+  return <h2 className={`text-xl font-semibold text-slate-900 ${className}`} {...props} />
 }
 
 export function CardContent({ className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) {

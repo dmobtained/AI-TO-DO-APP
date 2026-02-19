@@ -9,6 +9,14 @@
   --dd-orange: #f7931e;
   --dd-teal: #2ec4b6;
   --dd-white: #f4f6f8;
+  /* Executive theme (ingelogde app) */
+  --exec-bg: #f4f6f8;
+  --exec-text: #0f172a;
+  --exec-sidebar: #111827;
+  --exec-card: #ffffff;
+  --exec-border: #e5e7eb;
+  --exec-primary: #2563eb;
+  --exec-primary-hover: #1e40af;
 }
 
 body {

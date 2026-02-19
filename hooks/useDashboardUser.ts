@@ -7,7 +7,7 @@ import type { User } from '@supabase/supabase-js'
 
 /**
  * Use on dashboard pages: returns user and loading.
- * If AuthProvider has not yet set user, tries getSession() once so content still renders.
+ * Always tries getSession() as fallback so content renders even if AuthProvider is slow.
  */
 export function useDashboardUser(): { user: User | null; loading: boolean } {
   const { user: authUser, loading: authLoading } = useAuth()
@@ -15,7 +15,6 @@ export function useDashboardUser(): { user: User | null; loading: boolean } {
   const [sessionTried, setSessionTried] = useState(false)
 
   useEffect(() => {
-    if (authLoading || authUser) return
     if (sessionTried) return
     setSessionTried(true)
     getSupabaseClient()
@@ -24,10 +23,10 @@ export function useDashboardUser(): { user: User | null; loading: boolean } {
         if (session?.user) setSessionUser(session.user)
       })
       .catch(() => {})
-  }, [authLoading, authUser, sessionTried])
+  }, [sessionTried])
 
   const user = authUser ?? sessionUser
-  const loading = authLoading && !sessionUser
+  const loading = authLoading && !sessionUser && !authUser
 
   return { user, loading }
 }

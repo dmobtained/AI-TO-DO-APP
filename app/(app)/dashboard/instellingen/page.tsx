@@ -7,7 +7,11 @@ import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useAuth } from '@/context/AuthProvider'
 import { useDashboardUser } from '@/hooks/useDashboardUser'
 import { useDashboard } from '@/context/DashboardContext'
-import { useDeveloperMode } from '@/context/DeveloperModeContext'
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { Card, CardContent } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { PageContainer } from '@/components/ui/PageContainer'
 
 const EMAIL_ENABLED_KEY = 'email_enabled_'
 
@@ -17,11 +21,8 @@ export default function InstellingenPage() {
   const { user, loading: authLoading } = useDashboardUser()
   const { role } = useAuth()
   const { canSee } = useDashboard()
-  const { isEnabled: developerMode, setEnabled: setDeveloperMode } = useDeveloperMode()
   const [emailEnabled, setEmailEnabled] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false)
-  const [pendingEnable, setPendingEnable] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -60,125 +61,59 @@ export default function InstellingenPage() {
     }
   }
 
-  const handleDeveloperModeToggle = (checked: boolean) => {
-    if (checked) {
-      setPendingEnable(true)
-      setConfirmModalOpen(true)
-    } else {
-      setDeveloperMode(false)
-    }
-  }
-
-  const confirmDeveloperMode = () => {
-    setDeveloperMode(true)
-    setConfirmModalOpen(false)
-    setPendingEnable(false)
-  }
-
-  const cancelDeveloperMode = () => {
-    setConfirmModalOpen(false)
-    setPendingEnable(false)
-  }
-
   if (authLoading || !user) {
     return (
-      <div className="mx-auto max-w-4xl">
-        <div className="h-8 w-48 rounded bg-datadenkt-white/10 animate-pulse" />
-      </div>
+      <PageContainer>
+        <SectionHeader title="Instellingen" subtitle="Accountgegevens" />
+        <div className="mt-6 flex items-center gap-3 text-slate-500">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-[#2563eb]" />
+          <span className="text-sm">Laden…</span>
+        </div>
+      </PageContainer>
     )
   }
 
   const showEmailToggle = canSee('email_module')
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <h1 className="text-2xl font-semibold text-datadenkt-white">Instellingen</h1>
-      <p className="text-datadenkt-white/70 text-sm mt-0.5">Accountgegevens</p>
+    <PageContainer>
+      <SectionHeader title="Instellingen" subtitle="Accountgegevens" />
 
-      <div className="mt-8 card-primary p-6 space-y-6">
-        <div>
-          <label className="block text-xs font-medium text-datadenkt-white/70 uppercase tracking-wide mb-1">Email</label>
-          <p className="text-datadenkt-white">{user.email ?? '—'}</p>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-datadenkt-white/70 uppercase tracking-wide mb-1">Rol</label>
-          <p className="text-datadenkt-white">{role === 'admin' ? 'admin' : 'user'}</p>
-        </div>
-
-        {role === 'admin' && (
-          <div className="flex items-center justify-between pt-2 border-t border-white/10">
+      <div className="mt-8 mx-auto max-w-md">
+        <Card className="p-6">
+          <CardContent className="p-0 space-y-5">
             <div>
-              <p className="text-sm font-medium text-datadenkt-white">Developer Mode</p>
-              <p className="text-xs text-datadenkt-white/70 mt-0.5">Extra debug en admin tools</p>
+              <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Email</label>
+              <p className="text-slate-900 font-medium">{user.email ?? '—'}</p>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={developerMode}
-              onClick={() => handleDeveloperModeToggle(!developerMode)}
-              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-datadenkt-teal focus:ring-offset-2 focus:ring-offset-datadenkt-navy ${
-                developerMode ? 'bg-datadenkt-teal' : 'bg-datadenkt-white/20'
-              }`}
-            >
-              <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-datadenkt-white shadow ring-0 transition ${developerMode ? 'translate-x-5' : 'translate-x-1'}`} />
-            </button>
-          </div>
-        )}
+            <div>
+              <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Rol</label>
+              <Badge variant="neutral">{role === 'admin' ? 'admin' : 'user'}</Badge>
+            </div>
 
-        {showEmailToggle && (
-          <div className="flex items-center justify-between pt-2 border-t border-white/10">
-            <label className="text-sm font-medium text-datadenkt-white">E-mail koppeling aan</label>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={emailEnabled}
-              onClick={toggleEmail}
-              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-datadenkt-teal focus:ring-offset-2 focus:ring-offset-datadenkt-navy ${
-                emailEnabled ? 'bg-datadenkt-teal' : 'bg-datadenkt-white/20'
-              }`}
-            >
-              <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-datadenkt-white shadow ring-0 transition ${emailEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
-            </button>
-          </div>
-        )}
+            {showEmailToggle && (
+              <div className="flex items-center justify-between pt-4 border-t border-[#e5e7eb]">
+                <label className="text-sm font-medium text-slate-900">E-mail koppeling aan</label>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={emailEnabled}
+                  onClick={toggleEmail}
+                  className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2 focus:ring-offset-white ${emailEnabled ? 'bg-[#2563eb]' : 'bg-slate-200'}`}
+                >
+                  <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition translate-y-0.5 ${emailEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            )}
 
-        <div className="pt-4 border-t border-white/10">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="btn-accent px-4 py-2.5 text-sm"
-          >
-            Uitloggen
-          </button>
-        </div>
+            <div className="pt-4 border-t border-[#e5e7eb]">
+              <Button variant="secondary" onClick={handleLogout} className="w-full sm:w-auto">
+                Uitloggen
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {confirmModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={cancelDeveloperMode}>
-          <div className="card-primary p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-semibold text-datadenkt-white mb-2">Developer Mode</h3>
-            <p className="text-sm text-datadenkt-white/70 mb-6">
-              Weet je zeker dat je Developer Mode wilt inschakelen?
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={cancelDeveloperMode}
-                className="rounded-xl bg-datadenkt-white/10 px-4 py-2 text-sm font-medium text-datadenkt-white hover:bg-datadenkt-white/20 transition-all duration-200"
-              >
-                Annuleren
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeveloperMode}
-                className="btn-primary px-4 py-2 text-sm"
-              >
-                Inschakelen
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </PageContainer>
   )
 }

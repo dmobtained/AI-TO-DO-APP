@@ -39,7 +39,7 @@ export function AccordionItem({
   className?: string
 }) {
   return (
-    <div className={`border-b border-white/5 last:border-0 ${className}`} data-value={value}>
+    <div className={`border-b border-[#e5e7eb] last:border-0 ${className}`} data-value={value}>
       {children}
     </div>
   )
@@ -61,12 +61,12 @@ export function AccordionTrigger({
     <button
       type="button"
       onClick={toggle}
-      className={`flex w-full items-center justify-between py-4 text-left text-sm font-medium text-white hover:text-white/90 ${className}`}
+      className={`flex w-full items-center justify-between py-4 px-1 text-left text-sm font-medium text-slate-900 hover:bg-slate-50 rounded-lg transition-colors ${className}`}
       {...props}
     >
       {children}
-      <span className="shrink-0 text-white/60 transition-transform" style={{ transform: isOpen ? 'rotate(180deg)' : undefined }}>
-        ▼
+      <span className={`shrink-0 text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
       </span>
     </button>
   )
@@ -83,5 +83,5 @@ export function AccordionContent({
 }) {
   const ctx = useContext(AccordionContext)
   if (ctx?.open !== value) return null
-  return <div className={`pb-4 pt-0 text-sm text-white/80 ${className}`}>{children}</div>
+  return <div className={`pb-4 pt-0 text-sm text-slate-600 ${className}`}>{children}</div>
 }

@@ -11,6 +11,9 @@ import { FeatureGuard } from '@/components/FeatureGuard'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/Accordion'
 import { Button } from '@/components/ui/Button'
+import { StatCard } from '@/components/ui/StatCard'
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { PageContainer } from '@/components/ui/PageContainer'
 import type { FinanceEntry } from './components/types'
 import { getMonthRange } from './components/types'
 import { Building2, CreditCard, PiggyBank, Receipt } from 'lucide-react'
@@ -72,10 +75,10 @@ export default function FinancienOverviewPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="mx-auto max-w-4xl">
-        <div className="h-8 w-48 rounded bg-white/10 animate-pulse" />
-        <div className="mt-4 h-4 w-64 rounded bg-white/10 animate-pulse" />
-      </div>
+      <PageContainer>
+        <div className="h-8 w-48 rounded bg-slate-200 animate-pulse" />
+        <div className="mt-4 h-4 w-64 rounded bg-slate-200 animate-pulse" />
+      </PageContainer>
     )
   }
 
@@ -86,35 +89,27 @@ export default function FinancienOverviewPage() {
     { href: '/dashboard/financien/belasting', label: 'Belasting', icon: Receipt },
   ]
 
+  const vrijVariant = balance > 0 ? 'success' : balance < 0 ? 'danger' : 'muted'
+
   return (
     <FeatureGuard feature="finance_module">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="text-2xl font-semibold text-white">Financiën</h1>
-        <p className="text-white/70 text-sm mt-0.5">Overzicht</p>
+      <PageContainer>
+        <SectionHeader title="Financiën" subtitle="Overzicht" />
 
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <Card className="p-6">
-            <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Totaal salaris</p>
-            <p className="text-2xl font-bold text-white mt-1">{loading ? '—' : `€ ${totalIncome.toFixed(2)}`}</p>
-          </Card>
-          <Card className="p-6">
-            <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Totale vaste lasten</p>
-            <p className="text-2xl font-bold text-white mt-1">{loading ? '—' : `€ ${vasteLasten.toFixed(2)}`}</p>
-          </Card>
-          <Card className="p-6">
-            <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Vrij bedrag</p>
-            <p className="text-2xl font-bold text-white mt-1">{loading ? '—' : `€ ${balance.toFixed(2)}`}</p>
-          </Card>
+          <StatCard title="Totaal salaris" value={loading ? '—' : `€ ${totalIncome.toFixed(2)}`} />
+          <StatCard title="Totale vaste lasten" value={loading ? '—' : `€ ${vasteLasten.toFixed(2)}`} />
+          <StatCard title="Vrij bedrag" value={loading ? '—' : `€ ${balance.toFixed(2)}`} variant={vrijVariant} />
         </div>
 
         <Card className="mt-8 p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Secties</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Secties</h2>
           <Accordion defaultValue="abonnementen">
             {SECTIONS.map(({ id, label }) => (
               <AccordionItem key={id} value={id}>
                 <AccordionTrigger value={id}>{label}</AccordionTrigger>
                 <AccordionContent value={id}>
-                  <ul className="space-y-2 text-sm text-white/80">
+                  <ul className="space-y-2 text-sm text-slate-600">
                     <li>Placeholder item 1</li>
                     <li>Placeholder item 2</li>
                   </ul>
@@ -126,23 +121,23 @@ export default function FinancienOverviewPage() {
         </Card>
 
         <div className="mt-8">
-          <h2 className="text-lg font-semibold text-white mb-4">Snel naar</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Snel naar</h2>
+          <div className="grid grid-cols-2 gap-3">
             {links.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#171a21] p-4 text-white hover:bg-white/5 transition-colors"
+                className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 text-slate-900 shadow-sm hover:shadow-md hover:border-[#2563eb]/30 transition-all duration-200"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#3b82f6]/20 text-[#3b82f6">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#2563eb]/10 text-[#2563eb]">
                   <Icon className="h-5 w-5" />
                 </div>
-                <span className="font-medium">{label}</span>
+                <span className="font-medium text-sm">{label}</span>
               </Link>
             ))}
           </div>
         </div>
-      </div>
+      </PageContainer>
     </FeatureGuard>
   )
 }

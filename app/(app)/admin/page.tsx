@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthProvider'
 import { getSupabaseClient } from '@/lib/supabaseClient'
@@ -46,8 +46,7 @@ export default function AdminPage() {
       if (!res.ok) throw new Error('Failed to fetch users')
       const data = await res.json()
       setUsers(data.users ?? [])
-    } catch (err) {
-      console.error('[Admin] fetch users:', err)
+    } catch {
       setUsers([])
     } finally {
       setLoading(false)
@@ -65,8 +64,7 @@ export default function AdminPage() {
         .limit(200)
       if (error) throw error
       setActivity((data ?? []) as ActivityRow[])
-    } catch (err) {
-      console.error('[Admin] fetch activity:', err)
+    } catch {
       setActivity([])
     } finally {
       setActivityLoading(false)
@@ -94,12 +92,9 @@ export default function AdminPage() {
         body: JSON.stringify({ role: nextRole }),
       })
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        console.error('[Admin] update role error:', data.error ?? res.statusText)
         setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, role: user.role } : u)))
       }
-    } catch (err) {
-      console.error('[Admin] update role exception:', err)
+    } catch {
       setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, role: user.role } : u)))
     } finally {
       setUpdatingId(null)
@@ -122,7 +117,7 @@ export default function AdminPage() {
   if (authLoading || (!role && !authLoading)) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-white/60 text-sm">Laden...</p>
+        <p className="text-slate-500 text-sm">Laden...</p>
       </div>
     )
   }
@@ -133,7 +128,7 @@ export default function AdminPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <h1 className="text-2xl font-semibold text-white">Admin</h1>
+      <h1 className="text-xl font-semibold text-slate-900">Admin</h1>
       <Tabs defaultValue="activity">
         <TabsList>
           <TabsTrigger value="activity">
@@ -150,61 +145,20 @@ export default function AdminPage() {
         <TabsContent value="activity">
           <Card className="p-6">
             <CardHeader className="p-0 pb-4">
-              <CardTitle>Activity log</CardTitle>
+              <CardTitle className="text-slate-900">Activity log</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="flex flex-wrap gap-2 mb-4">
-                <Input
-                  placeholder="Filter op action / entity_type..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="max-w-xs"
-                />
-                <Input
-                  placeholder="Actor user id / email"
-                  value={actorFilter}
-                  onChange={(e) => setActorFilter(e.target.value)}
-                  className="max-w-xs"
-                />
+                <Input placeholder="Filter op action / entity_type..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+                <Input placeholder="Actor user id / email" value={actorFilter} onChange={(e) => setActorFilter(e.target.value)} className="max-w-xs" />
               </div>
               {activityLoading ? (
-                <p className="text-white/60 text-sm">Laden…</p>
+                <p className="text-slate-500 text-sm">Laden…</p>
               ) : filteredActivity.length === 0 ? (
-                <p className="text-white/60 text-sm">Geen events.</p>
+                <p className="text-slate-500 text-sm">Geen events.</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-white/10 text-left text-white/70">
-                        <th className="pb-2 pr-4">Tijd</th>
-                        <th className="pb-2 pr-4">Actor</th>
-                        <th className="pb-2 pr-4">Action</th>
-                        <th className="pb-2 pr-4">Entity</th>
-                        <th className="pb-2">Metadata</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredActivity.map((row) => (
-                        <tr key={row.id} className="border-b border-white/5">
-                          <td className="py-2 pr-4 text-white/80 whitespace-nowrap">
-                            {new Date(row.created_at).toLocaleString('nl-NL')}
-                          </td>
-                          <td className="py-2 pr-4 text-white/80">
-                            {row.actor_email ?? row.actor_user_id.slice(0, 8)}
-                          </td>
-                          <td className="py-2 pr-4 text-white font-medium">{row.action}</td>
-                          <td className="py-2 pr-4 text-white/80">
-                            {row.entity_type ?? '—'} {row.entity_id ? `(${String(row.entity_id).slice(0, 8)})` : ''}
-                          </td>
-                          <td className="py-2 text-white/60">
-                            {Object.keys(row.metadata ?? {}).length > 0
-                              ? JSON.stringify(row.metadata).slice(0, 60) + '…'
-                              : '—'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="overflow-auto max-h-[500px] rounded-xl border border-[#e5e7eb]">
+                  <ActivityTable rows={filteredActivity} />
                 </div>
               )}
             </CardContent>
@@ -214,15 +168,10 @@ export default function AdminPage() {
         <TabsContent value="users">
           <Card className="p-6">
             <CardHeader className="p-0 pb-4">
-              <CardTitle>Gebruikersbeheer</CardTitle>
+              <CardTitle className="text-slate-900">Gebruikersbeheer</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <UserTable
-                users={users}
-                loading={loading}
-                updatingId={updatingId}
-                onRoleChange={handleRoleChange}
-              />
+              <UserTable users={users} loading={loading} updatingId={updatingId} onRoleChange={handleRoleChange} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -230,14 +179,61 @@ export default function AdminPage() {
         <TabsContent value="system">
           <Card className="p-6">
             <CardHeader className="p-0 pb-4">
-              <CardTitle>System</CardTitle>
+              <CardTitle className="text-slate-900">System</CardTitle>
             </CardHeader>
-            <CardContent className="p-0 text-white/70 text-sm">
-              Placeholder: systeeminstellingen (geen developer mode).
+            <CardContent className="p-0 text-slate-600 text-sm">
+              Placeholder: systeeminstellingen.
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+function ActivityTable({ rows }: { rows: ActivityRow[] }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  return (
+    <table className="w-full text-sm">
+      <thead className="sticky top-0 bg-slate-50 border-b border-[#e5e7eb] z-10">
+        <tr className="text-left">
+          <th className="px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Action</th>
+          <th className="px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Entity</th>
+          <th className="px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
+          <th className="px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
+          <th className="px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Metadata</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-[#e5e7eb] bg-white">
+        {rows.map((row) => (
+          <React.Fragment key={row.id}>
+            <tr className="hover:bg-slate-50/50">
+              <td className="px-6 py-4 text-slate-900 font-medium">{row.action}</td>
+              <td className="px-6 py-4 text-slate-600">
+                {row.entity_type ?? '—'} {row.entity_id ? `(${String(row.entity_id).slice(0, 8)})` : ''}
+              </td>
+              <td className="px-6 py-4 text-slate-600">{row.actor_email ?? row.actor_user_id.slice(0, 8)}</td>
+              <td className="px-6 py-4 text-slate-600 whitespace-nowrap">{new Date(row.created_at).toLocaleString('nl-NL')}</td>
+              <td className="px-6 py-4">
+                {Object.keys(row.metadata ?? {}).length > 0 ? (
+                  <button type="button" onClick={() => setExpandedId(expandedId === row.id ? null : row.id)} className="text-[#2563eb] hover:underline text-xs">
+                    {expandedId === row.id ? 'Sluiten' : 'Bekijk JSON'}
+                  </button>
+                ) : (
+                  '—'
+                )}
+              </td>
+            </tr>
+            {expandedId === row.id && (
+              <tr>
+                <td colSpan={5} className="px-6 py-3 bg-slate-50 border-b border-[#e5e7eb]">
+                  <pre className="text-xs text-slate-700 overflow-x-auto whitespace-pre-wrap font-mono">{JSON.stringify(row.metadata ?? {}, null, 2)}</pre>
+                </td>
+              </tr>
+            )}
+          </React.Fragment>
+        ))}
+      </tbody>
+    </table>
   )
 }

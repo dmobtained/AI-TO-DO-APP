@@ -8,6 +8,12 @@ import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useDashboardUser } from '@/hooks/useDashboardUser'
 import { useToast } from '@/context/ToastContext'
 import { FeatureGuard } from '@/components/FeatureGuard'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { StatCard } from '@/components/ui/StatCard'
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { PageContainer } from '@/components/ui/PageContainer'
 
 type TaskStatus = 'OPEN' | 'DONE'
 type Priority = 'LOW' | 'MEDIUM' | 'HIGH'
@@ -79,35 +85,19 @@ function isDueToday(iso: string | null): boolean {
 function priorityBadgeClass(priority: string | null): string {
   switch (priority) {
     case 'HIGH':
-      return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+      return 'bg-red-50 text-red-600 border-red-200'
     case 'MEDIUM':
-      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+      return 'bg-amber-50 text-amber-600 border-amber-200'
     case 'LOW':
-      return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+      return 'bg-slate-100 text-slate-600 border-slate-200'
     default:
-      return 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+      return 'bg-slate-100 text-slate-500 border-slate-200'
   }
 }
 
 function deadlineBadgeClass(dueDate: string | null): string {
-  if (!dueDate) return 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-  return isOverdue(dueDate) ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
-}
-
-function StatCard({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
-  return (
-    <div className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm p-4">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-          {icon}
-        </div>
-        <div>
-          <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
-        </div>
-      </div>
-    </div>
-  )
+  if (!dueDate) return 'bg-slate-100 text-slate-500 border-slate-200'
+  return isOverdue(dueDate) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-100 text-slate-600 border-slate-200'
 }
 
 export default function TakenPage() {
@@ -226,207 +216,118 @@ export default function TakenPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="mx-auto max-w-6xl">
-        <div className="h-8 w-48 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
-        <div className="mt-4 h-4 w-64 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
-      </div>
+      <PageContainer>
+        <div className="h-8 w-48 rounded bg-slate-200 animate-pulse" />
+        <div className="mt-4 h-4 w-64 rounded bg-slate-200 animate-pulse" />
+      </PageContainer>
     )
   }
 
   return (
     <FeatureGuard feature="dashboard_tasks_list">
-    <div className="mx-auto max-w-6xl">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Taken</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Beheer je taken en deadlines</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowForm((v) => !v)}
-          className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
-        >
-          {showForm ? 'Sluiten' : 'Nieuwe taak'}
-        </button>
-      </div>
+    <PageContainer>
+      <SectionHeader
+        title="Taken"
+        subtitle="Beheer je taken en deadlines"
+        action={
+          <Button variant={showForm ? 'secondary' : 'primary'} onClick={() => setShowForm((v) => !v)}>
+            {showForm ? 'Sluiten' : 'Nieuwe taak'}
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <StatCard
-          icon={
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          }
-          value={openCount}
-          label="Open taken"
-        />
-        <StatCard
-          icon={
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          }
-          value={todayCount}
-          label="Taken vandaag"
-        />
-        <StatCard
-          icon={
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          }
-          value={overdueCount}
-          label="Overdue"
-        />
+        <StatCard title="Open taken" value={openCount} />
+        <StatCard title="Taken vandaag" value={todayCount} />
+        <StatCard title="Overdue" value={overdueCount} variant={overdueCount > 0 ? 'danger' : 'default'} />
       </div>
 
       {showForm && (
-        <div className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm p-6 mb-6">
-          <form onSubmit={handleAdd} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Titel *</label>
-              <input
-                type="text"
-                value={form.title}
-                onChange={(e) => updateForm('title', e.target.value)}
-                placeholder="Taak titel"
-                required
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder:text-slate-400 dark:bg-slate-700 dark:text-slate-100"
-                disabled={adding}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Details</label>
-              <textarea
-                value={form.details}
-                onChange={(e) => updateForm('details', e.target.value)}
-                placeholder="Optioneel"
-                rows={3}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-y placeholder:text-slate-400 dark:bg-slate-700 dark:text-slate-100"
-                disabled={adding}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card className="p-6 mb-6">
+          <CardContent className="p-0">
+            <form onSubmit={handleAdd} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Prioriteit</label>
-                <select
-                  value={form.priority}
-                  onChange={(e) => updateForm('priority', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-slate-100"
-                  disabled={adding}
-                >
-                  {PRIORITY_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Titel *</label>
+                <Input type="text" value={form.title} onChange={(e) => updateForm('title', e.target.value)} placeholder="Taak titel" required disabled={adding} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Details</label>
+                <textarea value={form.details} onChange={(e) => updateForm('details', e.target.value)} placeholder="Optioneel" rows={3} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20 resize-y" disabled={adding} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Prioriteit</label>
+                  <select value={form.priority} onChange={(e) => updateForm('priority', e.target.value)} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20" disabled={adding}>
+                    {PRIORITY_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Deadline</label>
+                  <Input type="date" value={form.due_date} onChange={(e) => updateForm('due_date', e.target.value)} disabled={adding} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Context</label>
+                  <select value={form.context} onChange={(e) => updateForm('context', e.target.value)} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20" disabled={adding}>
+                    <option value="">—</option>
+                    {CONTEXT_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Geschatte tijd (min)</label>
+                  <Input type="number" min={1} value={form.estimated_time} onChange={(e) => updateForm('estimated_time', e.target.value)} placeholder="bijv. 30" disabled={adding} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Energie</label>
+                <select value={form.energy_level} onChange={(e) => updateForm('energy_level', e.target.value)} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20 sm:max-w-[12rem]" disabled={adding}>
+                  {ENERGY_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Deadline</label>
-                <input
-                  type="date"
-                  value={form.due_date}
-                  onChange={(e) => updateForm('due_date', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-slate-100"
-                  disabled={adding}
-                />
+              <div className="flex gap-3 pt-1">
+                <Button type="submit" disabled={adding || !form.title.trim()}>{adding ? 'Bezig…' : 'Toevoegen'}</Button>
+                <Button type="button" variant="secondary" onClick={() => { setForm(emptyForm); setShowForm(false) }}>Annuleren</Button>
               </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Context</label>
-                <select
-                  value={form.context}
-                  onChange={(e) => updateForm('context', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-slate-100"
-                  disabled={adding}
-                >
-                  <option value="">—</option>
-                  {CONTEXT_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Geschatte tijd (min)</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={form.estimated_time}
-                  onChange={(e) => updateForm('estimated_time', e.target.value)}
-                  placeholder="bijv. 30"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:bg-slate-700 dark:text-slate-100"
-                  disabled={adding}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Energie</label>
-              <select
-                value={form.energy_level}
-                onChange={(e) => updateForm('energy_level', e.target.value)}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:max-w-[12rem] dark:bg-slate-700 dark:text-slate-100"
-                disabled={adding}
-              >
-                {ENERGY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex gap-3 pt-1">
-              <button
-                type="submit"
-                disabled={adding || !form.title.trim()}
-                className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {adding ? 'Bezig…' : 'Toevoegen'}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setForm(emptyForm); setShowForm(false) }}
-                className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-colors"
-              >
-                Annuleren
-              </button>
-            </div>
-          </form>
-        </div>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Alle taken</h2>
-          </div>
+        <Card className="md:col-span-2 overflow-hidden">
+          <CardHeader className="border-b border-[#e5e7eb]">
+            <CardTitle className="text-slate-900">Alle taken</CardTitle>
+          </CardHeader>
           {loading ? (
-            <ul className="divide-y divide-slate-100 dark:divide-slate-700">
+            <ul className="divide-y divide-[#e5e7eb]">
               {[1, 2, 3].map((i) => (
                 <li key={i} className="px-6 py-4">
-                  <div className="h-5 w-3/4 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
-                  <div className="mt-2 h-4 w-1/2 rounded bg-slate-100 dark:bg-slate-600 animate-pulse" />
+                  <div className="h-5 w-3/4 rounded bg-slate-100 animate-pulse" />
+                  <div className="mt-2 h-4 w-1/2 rounded bg-slate-100 animate-pulse" />
                 </li>
               ))}
             </ul>
           ) : (
-            <ul className="divide-y divide-slate-100 dark:divide-slate-700">
+            <ul className="divide-y divide-[#e5e7eb]">
               {tasks.length === 0 ? (
                 <li className="px-6 py-12 text-center">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Geen taken. Klik op &quot;Nieuwe taak&quot; om er een toe te voegen.</p>
+                  <p className="text-sm text-slate-500">Geen taken. Klik op &quot;Nieuwe taak&quot; om er een toe te voegen.</p>
                 </li>
               ) : (
                 tasks.map((task) => {
                   const overdue = task.status === 'OPEN' && isOverdue(task.due_date)
-                  const highPriority = task.priority === 'HIGH'
                   return (
                     <li
                       key={task.id}
-                      className={`px-6 py-4 transition hover:shadow-md ${overdue ? 'bg-red-50 dark:bg-red-900/10' : ''} ${highPriority ? 'border-l-4 border-red-500' : ''}`}
+                      className={`px-6 py-4 transition-all duration-200 hover:bg-slate-50/80 border-l-4 ${overdue ? 'border-red-500 bg-red-50/30' : 'border-[#2563eb]'}`}
                     >
                       <div className="flex items-start gap-4">
                         <button
                           type="button"
                           onClick={() => handleToggle(task)}
-                          className={`shrink-0 mt-0.5 flex items-center justify-center w-5 h-5 rounded-md border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                            task.status === 'DONE' ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 dark:border-slate-500 bg-white dark:bg-slate-800 hover:border-slate-400'
+                          className={`shrink-0 mt-0.5 flex items-center justify-center w-5 h-5 rounded-md border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2 ${
+                            task.status === 'DONE' ? 'border-[#2563eb] bg-[#2563eb]' : 'border-slate-300 bg-white hover:border-[#2563eb]'
                           }`}
                           aria-label={task.status === 'DONE' ? 'Open zetten' : 'Afvinken'}
                         >
@@ -437,23 +338,17 @@ export default function TakenPage() {
                           )}
                         </button>
                         <div className="flex-1 min-w-0">
-                          <span
-                            className={
-                              task.status === 'DONE'
-                                ? 'text-slate-500 dark:text-slate-400 line-through font-semibold'
-                                : 'text-slate-900 dark:text-slate-100 font-semibold'
-                            }
-                          >
+                          <span className={task.status === 'DONE' ? 'text-slate-500 line-through font-semibold' : 'text-slate-900 font-semibold'}>
                             {task.title}
                           </span>
-                          <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-slate-500 dark:text-slate-400">
+                          <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-slate-500">
                             {task.priority && (
-                              <span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${priorityBadgeClass(task.priority)}`}>
+                              <span className={`inline-flex rounded-lg border px-2 py-0.5 text-xs font-medium ${priorityBadgeClass(task.priority)}`}>
                                 {task.priority === 'HIGH' ? 'Hoog' : task.priority === 'MEDIUM' ? 'Normaal' : 'Laag'}
                               </span>
                             )}
                             {task.due_date && (
-                              <span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${deadlineBadgeClass(task.due_date)}`}>
+                              <span className={`inline-flex rounded-lg border px-2 py-0.5 text-xs font-medium ${deadlineBadgeClass(task.due_date)}`}>
                                 {isOverdue(task.due_date) ? 'Overdue · ' : ''}{formatDueDate(task.due_date)}
                               </span>
                             )}
@@ -461,12 +356,7 @@ export default function TakenPage() {
                             {task.estimated_time != null && task.estimated_time > 0 && <span>~{task.estimated_time} min</span>}
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(task.id)}
-                          className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-                          aria-label="Verwijderen"
-                        >
+                        <button type="button" onClick={() => handleDelete(task.id)} className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" aria-label="Verwijderen">
                           Verwijderen
                         </button>
                       </div>
@@ -476,15 +366,15 @@ export default function TakenPage() {
               )}
             </ul>
           )}
-        </div>
+        </Card>
 
-        <div className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm p-6">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">Snelle links</h2>
-          <Link href="/dashboard" className="block text-sm text-indigo-600 dark:text-indigo-400 hover:underline mb-2">← Dashboard</Link>
-          <Link href="/dashboard/financien" className="block text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Financiën →</Link>
-        </div>
+        <Card className="p-6">
+          <h2 className="text-sm font-semibold text-slate-900 mb-2">Snelle links</h2>
+          <Link href="/dashboard" className="block text-sm text-[#2563eb] hover:underline mb-2">← Dashboard</Link>
+          <Link href="/dashboard/financien" className="block text-sm text-[#2563eb] hover:underline">Financiën →</Link>
+        </Card>
       </div>
-    </div>
+    </PageContainer>
     </FeatureGuard>
   )
 }
