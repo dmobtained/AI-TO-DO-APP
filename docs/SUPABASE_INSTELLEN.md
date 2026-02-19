@@ -19,6 +19,9 @@ Voer het SQL van elk bestand uit, van oud naar nieuw:
 | 7 | `supabase/migrations/20250220000000_module_locks.sql` | Tabel **module_locks** + RLS + seed notities |
 | 8 | `supabase/migrations/20250220000001_notes.sql` | Tabel **notes** + RLS (notities-module) |
 | 9 | `supabase/migrations/20250221000000_missing_tables.sql` | **profiles** (bsn, iban, length_cm, weight_kg), **tasks**, **finance_entries** (incl. category), **emails**, **settings**, **modules** (aanvullend), **ai_notes**, **auto_entries**, **leads**, **meeting_notes** + RLS |
+| 10 | `supabase/migrations/20250222000000_auto_odometer_kenteken.sql` | **auto_entries**: kolom `odometer_km` toevoegen indien ontbreekt. **profiles**: kolom `kenteken` (nummerplaat) |
+
+**Let op:** Als je de fout "Could not find the 'odometer_km' column of 'auto_entries'" ziet bij Auto, voer dan migratie 10 uit (of opnieuw migratie 9 als de tabel zonder die kolom was aangemaakt).
 
 **Let op:** Als je lokaal met Supabase CLI werkt: `npx supabase db push` voert alle migraties in één keer uit. Gebruik anders de SQL Editor en plak per bestand de inhoud.
 

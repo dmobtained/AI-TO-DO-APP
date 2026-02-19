@@ -9,6 +9,8 @@ import { PageContainer } from '@/components/ui/PageContainer'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useToast } from '@/context/ToastContext'
+import { useAuth } from '@/context/AuthProvider'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import { Fuel, Wrench, AlertCircle, Car, Plus, Trash2 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 
@@ -32,9 +34,12 @@ const TABS = [
 
 export default function AutoPage() {
   const toast = useToast()
+  const { user } = useAuth()
   const [entries, setEntries] = useState<AutoEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<string>('fuel')
+  const [kenteken, setKenteken] = useState<string>('')
+  const [kentekenSaving, setKentekenSaving] = useState(false)
   const [form, setForm] = useState({
     title: '',
     amount: '',
@@ -43,6 +48,34 @@ export default function AutoPage() {
     odometer_km: '',
   })
   const [adding, setAdding] = useState(false)
+
+  const loadKenteken = useCallback(async () => {
+    if (!user?.id) return
+    const supabase = getSupabaseClient()
+    const { data } = await supabase.from('profiles').select('kenteken').eq('id', user.id).maybeSingle()
+    setKenteken(data?.kenteken ?? '')
+  }, [user?.id])
+
+  useEffect(() => {
+    loadKenteken()
+  }, [loadKenteken])
+
+  const saveKenteken = useCallback(
+    async (value: string) => {
+      if (!user?.id) return
+      setKentekenSaving(true)
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.from('profiles').update({ kenteken: value.trim() || null }).eq('id', user.id)
+      setKentekenSaving(false)
+      if (error) {
+        toast(error.message, 'error')
+        return
+      }
+      setKenteken(value.trim())
+      toast('Kenteken opgeslagen')
+    },
+    [user?.id, toast]
+  )
 
   const fetchEntries = useCallback(async () => {
     setLoading(true)
@@ -108,7 +141,23 @@ export default function AutoPage() {
 
   return (
     <PageContainer>
-      <SectionHeader title="Auto" subtitle="Kosten en onderhoud" />
+      <SectionHeader
+        title="Auto"
+        subtitle="Kosten en onderhoud"
+        action={
+          <div className="flex items-center gap-2 text-right">
+            <span className="text-xs text-slate-500 uppercase tracking-wide shrink-0">Kenteken</span>
+            <Input
+              placeholder="AB-123-CD"
+              value={kenteken}
+              onChange={(e) => setKenteken(e.target.value)}
+              onBlur={() => saveKenteken(kenteken)}
+              disabled={kentekenSaving}
+              className="w-24 h-7 text-xs font-mono text-slate-700"
+            />
+          </div>
+        }
+      />
 
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Totale kosten dit jaar" value={loading ? '€ —' : `€ ${totalCostYear.toFixed(2)}`} />
