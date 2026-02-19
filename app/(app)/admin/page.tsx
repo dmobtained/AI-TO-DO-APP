@@ -179,10 +179,13 @@ export default function AdminPage() {
         <TabsContent value="system">
           <Card className="p-6">
             <CardHeader className="p-0 pb-4">
-              <CardTitle className="text-slate-900">System</CardTitle>
+              <CardTitle className="text-slate-900">Systeeminfo</CardTitle>
             </CardHeader>
-            <CardContent className="p-0 text-slate-600 text-sm">
-              Placeholder: systeeminstellingen.
+            <CardContent className="p-0 text-slate-600 text-sm space-y-3">
+              <p><span className="font-medium text-slate-700">Omgeving:</span> {typeof window !== 'undefined' ? (process.env.NODE_ENV ?? 'development') : '—'}</p>
+              <p><span className="font-medium text-slate-700">Supabase:</span> Geconfigureerd via NEXT_PUBLIC_SUPABASE_URL (controleer .env).</p>
+              <p><span className="font-medium text-slate-700">AI / Dagnotitie:</span> N8N_AI_HUB_WEBHOOK of NEXT_PUBLIC_N8N_AI_HUB_WEBHOOK in .env voor dagnotitie.</p>
+              <p className="pt-2 border-t border-[#e5e7eb] text-slate-500">Geen extra systeeminstellingen in deze versie. Modules en locks beheer je via de database of bestaande flows.</p>
             </CardContent>
           </Card>
         </TabsContent>

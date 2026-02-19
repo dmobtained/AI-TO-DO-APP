@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { FeatureFlags } from '@/lib/feature-flags'
 import type { ModuleStatus } from '@/lib/dashboard-auth'
 import { DashboardProvider } from '@/context/DashboardContext'
 import { getSidebarItems } from '@/lib/sidebar-config'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react'
 
 type AppShellProps = {
   session: { user: { id: string; email?: string; user_metadata?: Record<string, unknown> } } | null
@@ -33,6 +34,7 @@ export function AppShell({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
   const [mounted, setMounted] = useState(false)
+  const [financienOpen, setFinancienOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -53,6 +55,10 @@ export function AppShell({
     const t = setInterval(format, 1000)
     return () => clearInterval(t)
   }, [mounted])
+
+  useEffect(() => {
+    if (pathname.startsWith('/dashboard/financien')) setFinancienOpen(true)
+  }, [pathname])
 
   const items = getSidebarItems(role)
   const displayName =
@@ -104,11 +110,62 @@ export function AppShell({
           </div>
           <nav className="flex-1 space-y-0.5 overflow-y-auto p-4">
             {items.map((item) => {
+              const hasChildren = item.children && item.children.length > 0
+              const isFinancien = item.path === '/dashboard/financien'
+              const isOpen = isFinancien ? financienOpen : false
               const isActive =
                 pathname === item.path ||
                 (item.path !== '/dashboard' && pathname.startsWith(item.path))
               const Icon = item.icon
               const isAdminItem = item.adminOnly
+
+              if (hasChildren) {
+                return (
+                  <div key={item.path} className="space-y-0.5">
+                    <div className="flex min-w-0 items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => isFinancien && setFinancienOpen((o) => !o)}
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/70 hover:bg-white/5 hover:text-white"
+                        aria-expanded={isOpen}
+                        aria-label={isOpen ? 'Financiën submenu sluiten' : 'Financiën submenu openen'}
+                      >
+                        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </button>
+                      <Link
+                        href={item.path}
+                        onClick={() => setSidebarOpen(false)}
+                        className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left text-sm font-medium text-white transition-all ${
+                          isAdminItem ? 'opacity-75' : ''
+                        } ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                      >
+                        <Icon className="h-5 w-5 shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    </div>
+                    {isOpen && item.children && (
+                      <div className="ml-4 flex flex-col border-l border-white/10 pl-3">
+                        {item.children.map((sub) => {
+                          const subActive = pathname === sub.path
+                          return (
+                            <Link
+                              key={sub.path}
+                              href={sub.path}
+                              onClick={() => setSidebarOpen(false)}
+                              className={`mt-0.5 rounded-lg px-2 py-2 text-sm text-white/90 transition-colors hover:bg-white/5 hover:text-white ${
+                                subActive ? 'bg-white/10 font-medium text-white' : ''
+                              }`}
+                            >
+                              {sub.label}
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
               return (
                 <Link
                   key={item.path}
@@ -116,11 +173,7 @@ export function AppShell({
                   onClick={() => setSidebarOpen(false)}
                   className={`flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-white transition-all ${
                     isAdminItem ? 'opacity-75' : ''
-                  } ${
-                    isActive
-                      ? 'bg-white/10'
-                      : 'hover:bg-white/5'
-                  }`}
+                  } ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}
                 >
                   <Icon className="h-5 w-5 shrink-0" />
                   <span className="truncate">{item.label}</span>
@@ -134,6 +187,16 @@ export function AppShell({
       <div className="flex min-w-0 flex-1 flex-col pl-0 md:pl-60">
         <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-[#e5e7eb] bg-white px-4 shadow-sm md:px-6">
           <div className="flex min-w-0 items-center gap-4">
+            <Link href="/dashboard" className="flex shrink-0 items-center" aria-label="DataDenkt home">
+              <Image
+                src="/datadenkt-logo.png"
+                alt="DataDenkt"
+                width={120}
+                height={36}
+                className="h-9 w-auto object-contain"
+                priority
+              />
+            </Link>
             <button
               type="button"
               className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 md:hidden"

@@ -11,12 +11,14 @@ import { FeatureGuard } from '@/components/FeatureGuard'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/Accordion'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
 import { StatCard } from '@/components/ui/StatCard'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { PageContainer } from '@/components/ui/PageContainer'
+import { useToast } from '@/context/ToastContext'
 import type { FinanceEntry } from './components/types'
 import { getMonthRange } from './components/types'
-import { Building2, CreditCard, PiggyBank, Receipt } from 'lucide-react'
+import { Building2, CreditCard, PiggyBank, Receipt, Trash2 } from 'lucide-react'
 
 const SECTIONS = [
   { id: 'abonnementen', label: 'Abonnementen' },
@@ -30,9 +32,12 @@ const SECTIONS = [
 export default function FinancienOverviewPage() {
   const supabase = getSupabaseClient()
   const router = useRouter()
+  const toast = useToast()
   const { user, loading: authLoading } = useDashboardUser()
   const [entries, setEntries] = useState<FinanceEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [addingSection, setAddingSection] = useState<string | null>(null)
+  const [addForm, setAddForm] = useState({ title: '', amount: '', entry_date: new Date().toISOString().slice(0, 10) })
   const { first, last } = useMemo(() => getMonthRange(), [])
 
   const fetchEntries = useCallback(async () => {
@@ -73,6 +78,65 @@ export default function FinancienOverviewPage() {
   const balance = totalIncome - totalExpense
   const vasteLasten = totalExpense
 
+  const entriesBySection = useMemo(() => {
+    const map: Record<string, FinanceEntry[]> = {}
+    for (const s of SECTIONS) map[s.id] = []
+    for (const e of entries) {
+      if (e.type !== 'expense') continue
+      const cat = e.category && SECTIONS.some((s) => s.id === e.category) ? e.category : 'losse'
+      if (!map[cat]) map[cat] = []
+      map[cat].push(e)
+    }
+    for (const s of SECTIONS) {
+      (map[s.id] ?? []).sort((a, b) => b.entry_date.localeCompare(a.entry_date))
+    }
+    return map
+  }, [entries])
+
+  const handleAddToSection = useCallback(
+    async (sectionId: string) => {
+      if (!user?.id || !addForm.title.trim() || !addForm.amount.trim()) return
+      setAddingSection(sectionId)
+      const amount = parseFloat(addForm.amount.replace(',', '.'))
+      if (Number.isNaN(amount) || amount < 0) {
+        toast('Voer een geldig bedrag in', 'error')
+        setAddingSection(null)
+        return
+      }
+      const { error } = await supabase.from('finance_entries').insert({
+        user_id: user.id,
+        type: 'expense',
+        title: addForm.title.trim(),
+        amount: String(amount),
+        entry_date: addForm.entry_date,
+        category: sectionId,
+      })
+      setAddingSection(null)
+      if (error) {
+        toast(error.message, 'error')
+        return
+      }
+      setAddForm({ title: '', amount: '', entry_date: new Date().toISOString().slice(0, 10) })
+      toast('Uitgave toegevoegd')
+      fetchEntries()
+    },
+    [user?.id, addForm, supabase, toast, fetchEntries]
+  )
+
+  const handleDeleteEntry = useCallback(
+    async (entry: FinanceEntry) => {
+      if (!user?.id) return
+      const { error } = await supabase.from('finance_entries').delete().eq('id', entry.id).eq('user_id', user.id)
+      if (error) {
+        toast(error.message, 'error')
+        return
+      }
+      toast('Verwijderd')
+      fetchEntries()
+    },
+    [user?.id, supabase, toast, fetchEntries]
+  )
+
   if (authLoading || !user) {
     return (
       <PageContainer>
@@ -110,10 +174,54 @@ export default function FinancienOverviewPage() {
                 <AccordionTrigger value={id}>{label}</AccordionTrigger>
                 <AccordionContent value={id}>
                   <ul className="space-y-2 text-sm text-slate-600">
-                    <li>Placeholder item 1</li>
-                    <li>Placeholder item 2</li>
+                    {(entriesBySection[id] ?? []).length === 0 && (
+                      <li className="text-slate-500">Geen items in deze sectie.</li>
+                    )}
+                    {(entriesBySection[id] ?? []).map((entry) => (
+                      <li key={entry.id} className="flex items-center justify-between gap-2 py-1 border-b border-slate-100 last:border-0">
+                        <span className="truncate">{entry.title}</span>
+                        <span className="font-medium text-slate-900 shrink-0">€ {Number(entry.amount).toFixed(2)}</span>
+                        <span className="text-slate-400 text-xs shrink-0">{entry.entry_date}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteEntry(entry)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 rounded"
+                          aria-label="Verwijderen"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </li>
+                    ))}
                   </ul>
-                  <Button variant="secondary" className="mt-3">+ Toevoegen</Button>
+                  <div className="mt-3 flex flex-wrap gap-2 items-end">
+                    <Input
+                      placeholder="Omschrijving"
+                      value={addForm.title}
+                      onChange={(e) => setAddForm((f) => ({ ...f, title: e.target.value }))}
+                      className="w-40"
+                    />
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="Bedrag"
+                      value={addForm.amount}
+                      onChange={(e) => setAddForm((f) => ({ ...f, amount: e.target.value }))}
+                      className="w-24"
+                    />
+                    <Input
+                      type="date"
+                      value={addForm.entry_date}
+                      onChange={(e) => setAddForm((f) => ({ ...f, entry_date: e.target.value }))}
+                      className="w-36"
+                    />
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleAddToSection(id)}
+                      disabled={addingSection !== null || !addForm.title.trim() || !addForm.amount.trim()}
+                    >
+                      {addingSection === id ? 'Bezig…' : '+ Toevoegen'}
+                    </Button>
+                  </div>
                 </AccordionContent>
               </AccordionItem>
             ))}

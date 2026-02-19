@@ -1,35 +1,114 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { PageContainer } from '@/components/ui/PageContainer'
+import { useToast } from '@/context/ToastContext'
 import { logActivity } from '@/lib/audit'
-import { Users, Sparkles } from 'lucide-react'
+import { Sparkles, Save } from 'lucide-react'
+
+type Note = { id: string; content: string; summary: string | null; updated_at: string }
 
 export default function VergaderingenPage() {
+  const toast = useToast()
   const [notities, setNotities] = useState('')
   const [summary, setSummary] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [currentNote, setCurrentNote] = useState<Note | null>(null)
+  const [loadDone, setLoadDone] = useState(false)
+
+  const loadNote = useCallback(async () => {
+    const res = await fetch('/api/meeting-notes', { credentials: 'include' })
+    const data = await res.json().catch(() => ({}))
+    if (res.ok && data.note) {
+      setCurrentNote(data.note)
+      setNotities(data.note.content ?? '')
+      setSummary(data.note.summary ?? null)
+    } else {
+      setCurrentNote(null)
+      setNotities('')
+      setSummary(null)
+    }
+    setLoadDone(true)
+  }, [])
+
+  useEffect(() => {
+    loadNote()
+  }, [loadNote])
+
+  const handleSave = useCallback(async () => {
+    setSaving(true)
+    if (currentNote?.id) {
+      const res = await fetch(`/api/meeting-notes/${currentNote.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ content: notities }),
+      })
+      const data = await res.json().catch(() => ({}))
+      setSaving(false)
+      if (!res.ok) {
+        toast(data.error ?? 'Opslaan mislukt', 'error')
+        return
+      }
+      setCurrentNote(data.note)
+      toast('Opgeslagen')
+    } else {
+      const res = await fetch('/api/meeting-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ content: notities }),
+      })
+      const data = await res.json().catch(() => ({}))
+      setSaving(false)
+      if (!res.ok) {
+        toast(data.error ?? 'Opslaan mislukt', 'error')
+        return
+      }
+      setCurrentNote(data.note)
+      toast('Opgeslagen')
+    }
+  }, [currentNote, notities, toast])
 
   const handleSummarize = useCallback(() => {
     setLoading(true)
     setSummary(null)
+    logActivity({ action: 'meeting.summarize', entity_type: 'meeting' })
     setTimeout(() => {
-      setSummary('Placeholder samenvatting: dit is een voorbeeldtekst. AI samenvatten wordt later gekoppeld.')
+      if (notities.trim().length > 0) {
+        setSummary(
+          'Samenvatting (demo): AI-samenvatting kan later gekoppeld worden aan een webhook (bijv. N8N). Hier tonen we een korte indicatie op basis van je notities.\n\nKernpunten:\n• Notities worden opgeslagen.\n• Klik op "Opslaan" om je wijzigingen te bewaren.'
+        )
+      } else {
+        setSummary('Voeg eerst notities toe en klik op Opslaan. Daarna kan AI een samenvatting genereren.')
+      }
       setLoading(false)
-      logActivity({ action: 'meeting.summarize', entity_type: 'meeting' })
     }, 600)
-  }, [])
+  }, [notities])
+
+  if (!loadDone) {
+    return (
+      <PageContainer>
+        <SectionHeader title="Vergaderingen" subtitle="Laden…" />
+        <div className="mt-8 h-32 flex items-center justify-center text-slate-500 text-sm">Laden…</div>
+      </PageContainer>
+    )
+  }
 
   return (
     <PageContainer>
       <SectionHeader title="Vergaderingen" subtitle="Notities en AI-samenvatting" />
 
       <Card className="mt-8 p-6">
-        <CardHeader className="p-0 pb-4">
+        <CardHeader className="p-0 pb-4 flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-slate-900">Notities</CardTitle>
+          <Button variant="secondary" onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4 mr-2" /> {saving ? 'Bezig…' : 'Opslaan'}
+          </Button>
         </CardHeader>
         <CardContent className="p-0">
           <textarea

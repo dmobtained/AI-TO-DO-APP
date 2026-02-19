@@ -151,10 +151,10 @@ export default function ValutaPage() {
                 ))}
               </select>
             </div>
-            <div className="pt-2">
-              <p className="text-xs text-white/50">Uitkomst</p>
+            <div className="pt-2 rounded-lg bg-white/5 p-3">
+              <p className="text-xs text-white/50">Uitkomst (live koersen)</p>
               <p className="text-2xl font-bold text-white">
-                {loading ? '—' : `${converted.toFixed(4)} ${to}`}
+                {loading ? 'Laden…' : amountNum > 0 ? `${converted.toFixed(4)} ${to}` : '—'}
               </p>
             </div>
           </CardContent>
@@ -162,8 +162,8 @@ export default function ValutaPage() {
 
         <Card className="p-6">
           <CardHeader className="p-0 pb-4 flex justify-between items-center">
-            <CardTitle>Rates</CardTitle>
-            <span className="text-xs text-white/50">Laatst bijgewerkt: {lastUpdated}</span>
+            <CardTitle>Koersen (Frankfurter/ECB)</CardTitle>
+            <span className="text-xs text-white/50">Bijgewerkt: {lastUpdated}</span>
           </CardHeader>
           <CardContent className="p-0">
             <div className="space-y-2">

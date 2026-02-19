@@ -17,11 +17,15 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
+export type SidebarSubItem = { path: string; label: string }
+
 export type SidebarItem = {
   path: string
   label: string
   icon: LucideIcon
   adminOnly?: boolean
+  /** Sub-items for dropdown (e.g. Financiën → Bank, Vaste lasten, …) */
+  children?: SidebarSubItem[]
 }
 
 /** Single source of truth for sidebar order. Admin last, adminOnly. */
@@ -30,7 +34,17 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
   { path: '/dashboard/taken', label: 'Taken', icon: ListTodo },
   { path: '/dashboard/email', label: 'E-mail', icon: Mail },
   { path: '/dashboard/instellingen', label: 'Instellingen', icon: Settings },
-  { path: '/dashboard/financien', label: 'Financiën', icon: Wallet },
+  {
+    path: '/dashboard/financien',
+    label: 'Financiën',
+    icon: Wallet,
+    children: [
+      { path: '/dashboard/financien/bank', label: 'Bank' },
+      { path: '/dashboard/financien/lasten', label: 'Vaste lasten' },
+      { path: '/dashboard/financien/belasting', label: 'Belasting' },
+      { path: '/dashboard/financien/beleggen', label: 'Beleggen' },
+    ],
+  },
   { path: '/goud', label: 'Goud', icon: Award },
   { path: '/auto', label: 'Auto', icon: Car },
   { path: '/business', label: 'Business', icon: Briefcase },

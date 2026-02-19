@@ -83,18 +83,21 @@ const FALLBACK_RATES: Record<string, Record<string, number>> = {
   },
 }
 
+const FRANKFURTER_URL = 'https://api.frankfurter.dev/v1/latest'
+
 export async function fetchRates(base: string): Promise<RatesResult> {
   const cached = getCachedRates(base)
   if (cached) return cached
   try {
     const res = await fetch(
-      `https://api.exchangerate.host/latest?base=${encodeURIComponent(base)}`
+      `${FRANKFURTER_URL}?from=${encodeURIComponent(base)}`
     )
     const data = await res.json()
     if (data?.rates && typeof data.rates === 'object') {
+      const rates = data.rates as Record<string, number>
       const result: RatesResult = {
         base: data.base ?? base,
-        rates: data.rates as Record<string, number>,
+        rates: { ...rates, [base]: 1 },
         timestamp: Date.now(),
       }
       setCachedRates(base, result)

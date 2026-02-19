@@ -248,18 +248,60 @@ export default function DashboardPage() {
     return () => { mounted = false }
   }, [])
 
-  const handleQuickExpenseAdd = useCallback(() => {
+  const fetchQuickListToday = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const today = new Date().toISOString().slice(0, 10)
+    const { data } = await supabase
+      .from('finance_entries')
+      .select('id, amount, entry_date')
+      .eq('user_id', user.id)
+      .eq('type', 'expense')
+      .eq('title', 'Snelle uitgave')
+      .eq('entry_date', today)
+      .order('created_at', { ascending: false })
+    const list = (data ?? []).map((r: { id: string; amount: string; entry_date: string }) => ({
+      id: r.id,
+      amount: Number(r.amount) || 0,
+      date: r.entry_date,
+    }))
+    setQuickListToday(list)
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    fetchQuickListToday().then(() => { if (!mounted) return })
+    return () => { mounted = false }
+  }, [fetchQuickListToday])
+
+  const handleQuickExpenseAdd = useCallback(async () => {
     const amount = parseFloat(quickAmount.replace(',', '.'))
     if (Number.isNaN(amount) || amount <= 0) {
       toast('Voer een geldig bedrag in', 'error')
       return
     }
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast('Niet ingelogd', 'error')
+      return
+    }
     const date = new Date().toISOString().slice(0, 10)
-    setQuickListToday((prev) => [...prev, { id: crypto.randomUUID(), amount, date }])
+    const { error } = await supabase.from('finance_entries').insert({
+      user_id: user.id,
+      type: 'expense',
+      title: 'Snelle uitgave',
+      amount: String(amount),
+      entry_date: date,
+    })
+    if (error) {
+      toast(error.message, 'error')
+      return
+    }
     setQuickAmount('')
     logActivity({ action: 'expense.quick_add', metadata: { amount, date } })
     toast('Uitgave toegevoegd')
-  }, [quickAmount, toast])
+    fetchQuickListToday()
+  }, [quickAmount, toast, fetchQuickListToday])
 
   const welcomeText = profileName ? `Welkom terug ${profileName}` : 'Welkom terug'
   const [advancedOpen, setAdvancedOpen] = useState(false)

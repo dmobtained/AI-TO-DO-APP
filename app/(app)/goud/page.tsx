@@ -14,6 +14,7 @@ export default function GoudPage() {
   const [direction, setDirection] = useState<"long" | "short">("long");
   const [entry, setEntry] = useState("2650");
   const [stopLoss, setStopLoss] = useState("2640");
+  const [trendFilter, setTrendFilter] = useState<'alle' | 'opwaarts' | 'neerwaarts'>('alle');
 
   const calc = useMemo(() => {
     const balance = parseFloat(accountBalance) || 0;
@@ -154,9 +155,29 @@ export default function GoudPage() {
           <CardHeader className="p-0 pb-4">
             <CardTitle className="text-slate-900">Trendfilter</CardTitle>
           </CardHeader>
-          <CardContent className="p-0 text-sm text-slate-600">
-            Trendfilter check vereist via live data integratie. 200 EMA op 4H
-            (placeholder).
+          <CardContent className="p-0 space-y-3">
+            <div>
+              <label className="block text-sm text-slate-500 mb-1">Richting trend</label>
+              <select
+                value={trendFilter}
+                onChange={(e) => setTrendFilter(e.target.value as 'alle' | 'opwaarts' | 'neerwaarts')}
+                className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-[#2563eb] focus:outline-none"
+              >
+                <option value="alle">Alle</option>
+                <option value="opwaarts">Opwaarts (long bias)</option>
+                <option value="neerwaarts">Neerwaarts (short bias)</option>
+              </select>
+            </div>
+            <p className="text-sm text-slate-600">
+              {trendFilter === 'alle' && 'Geen filter: beide richtingen toegestaan.'}
+              {trendFilter === 'opwaarts' && 'Alleen long-posities in lijn met opwaartse trend (200 EMA 4H).'}
+              {trendFilter === 'neerwaarts' && 'Alleen short-posities in lijn met neerwaartse trend (200 EMA 4H).'}
+            </p>
+            {trendFilter !== 'alle' && (
+              <p className="text-xs text-slate-500">
+                Match: {trendFilter === 'opwaarts' && direction === 'long' ? '✓ Long in lijn' : trendFilter === 'neerwaarts' && direction === 'short' ? '✓ Short in lijn' : '⚠ Richting wijkt af van trendfilter.'}
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -5,8 +5,20 @@ export type FinanceEntry = {
   title: string
   amount: string
   entry_date: string
+  category?: string | null
   created_at: string
 }
+
+/** Sectie-ids voor Financiën overzicht (moeten overeenkomen met category in finance_entries) */
+export const FINANCE_SECTION_IDS = [
+  'abonnementen',
+  'huur',
+  'verzekeringen',
+  'energie',
+  'belastingen',
+  'losse',
+] as const
+export type FinanceSectionId = (typeof FINANCE_SECTION_IDS)[number]
 
 export function getMonthRange() {
   const now = new Date()
