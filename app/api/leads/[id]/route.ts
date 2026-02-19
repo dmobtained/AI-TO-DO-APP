@@ -13,9 +13,8 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json().catch(() => ({}))
-  const updates: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
-  }
+  // Supabase .update() string fields: use '' to clear, never null (TypeScript: string | undefined only)
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (body.stage && ['lead', 'gesprek', 'deal'].includes(body.stage)) updates.stage = body.stage
   if (body.title !== undefined) updates.title = String(body.title).trim() || ''
   if (body.notes !== undefined) {

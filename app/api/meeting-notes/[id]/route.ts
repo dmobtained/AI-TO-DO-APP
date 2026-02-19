@@ -13,10 +13,12 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json().catch(() => ({}))
-  const updates: { content?: string; summary?: string; updated_at?: string } = {}
+  // Supabase .update() string fields: use '' to clear, never null (TypeScript: string | undefined only)
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (body.content !== undefined) updates.content = String(body.content)
-  if (body.summary !== undefined) updates.summary = body.summary == null ? null : String(body.summary)
-  updates.updated_at = new Date().toISOString()
+  if (body.summary !== undefined) {
+    updates.summary = body.summary ? String(body.summary).trim() : ''
+  }
 
   const { data: row, error } = await supabase
     .from('meeting_notes')
