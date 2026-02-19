@@ -119,7 +119,6 @@ export default function BusinessPage() {
                 </CardTitle>
                 <Button
                   variant="ghost"
-                  size="sm"
                   onClick={() => setAddingStage(id)}
                   className="shrink-0"
                   aria-label={`${label} toevoegen`}
@@ -137,10 +136,10 @@ export default function BusinessPage() {
                       onKeyDown={(e) => e.key === 'Enter' && handleAdd(id)}
                     />
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={() => handleAdd(id)} disabled={!newTitle.trim()}>
+                      <Button onClick={() => handleAdd(id)} disabled={!newTitle.trim()}>
                         Toevoegen
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => { setAddingStage(null); setNewTitle('') }}>
+                      <Button variant="ghost" onClick={() => { setAddingStage(null); setNewTitle('') }}>
                         Annuleren
                       </Button>
                     </div>

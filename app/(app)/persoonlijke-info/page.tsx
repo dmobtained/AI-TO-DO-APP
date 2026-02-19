@@ -157,19 +157,19 @@ function EditableField({
             className="w-36"
             placeholder={label === 'BSN' ? '123456782' : label === 'IBAN' ? 'NL91 ABNA...' : label === 'Lengte' ? '180 cm' : '75 kg'}
           />
-          <Button size="sm" onClick={() => { onSave(draft); setEditing(false) }} disabled={saving}>
+          <Button onClick={() => { onSave(draft); setEditing(false) }} disabled={saving}>
             {saving ? 'Bezig…' : 'Opslaan'}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setDraft(value) }}>
+          <Button variant="ghost" onClick={() => { setEditing(false); setDraft(value) }}>
             Annuleren
           </Button>
         </>
       ) : (
         <>
-          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+          <Button variant="ghost" onClick={() => setEditing(true)}>
             Bewerken
           </Button>
-          <Button variant="secondary" size="sm" onClick={copy}>
+          <Button variant="secondary" onClick={copy}>
             {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
           </Button>
         </>
