@@ -18,7 +18,9 @@ export async function PATCH(
   }
   if (body.stage && ['lead', 'gesprek', 'deal'].includes(body.stage)) updates.stage = body.stage
   if (body.title !== undefined) updates.title = String(body.title).trim() || ''
-  if (body.notes !== undefined) updates.notes = body.notes == null ? '' : String(body.notes).trim()
+  if (body.notes !== undefined) {
+    updates.notes = body.notes ? String(body.notes).trim() : ''
+  }
 
   const { data: row, error } = await supabase
     .from('leads')
