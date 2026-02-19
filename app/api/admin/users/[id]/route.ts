@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
-type PatchBody = { role: 'ADMIN' | 'USER' }
+type PatchBody = { role: 'admin' | 'user' }
 
 export async function PATCH(
   request: NextRequest,
@@ -22,11 +22,12 @@ export async function PATCH(
     const admin = supabaseAdmin
 
     const { data: myProfile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-    const isAdmin = myProfile?.role === 'ADMIN' || (user.user_metadata?.role && String(user.user_metadata.role).toUpperCase() === 'ADMIN')
+    const isAdmin = (myProfile?.role?.toLowerCase?.() ?? '') === 'admin' || (user.user_metadata?.role && String(user.user_metadata.role).toLowerCase().trim() === 'admin')
     if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = (await request.json()) as PatchBody
-    const role = body?.role === 'ADMIN' || body?.role === 'USER' ? body.role : undefined
+    const rawRole = body?.role?.toLowerCase?.()?.trim()
+    const role = rawRole === 'admin' || rawRole === 'user' ? rawRole : undefined
     if (!role) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
 
     let authMetadataUpdated = false

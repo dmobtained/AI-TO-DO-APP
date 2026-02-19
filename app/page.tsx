@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 
-const LOGIN_TIMEOUT_MS = 10000;
+const LOGIN_TIMEOUT_MS = 20000; // 20 sec voor trage verbindingen
+const SESSION_CHECK_TIMEOUT_MS = 5000;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
   const sessionCheckDone = useRef(false);
+
 
   // Eenmalige session-check bij mount: als er al een sessie is → ga naar dashboard
   useEffect(() => {
@@ -39,8 +41,17 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    if (typeof window !== "undefined") {
+      const url = window.__SUPABASE_ENV__?.url ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (!url || url === "https://placeholder.supabase.co") {
+        setError(
+          "Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local en herstart de dev-server (npm run dev)."
+        );
+        return;
+      }
+    }
+    setLoading(true);
 
     try {
       const loginPromise = supabase.auth.signInWithPassword({ email, password });
@@ -59,7 +70,7 @@ export default function LoginPage() {
       // Sessie check met korte timeout (voorkomt hangen)
       const sessionPromise = supabase.auth.getSession();
       const sessionTimeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("SESSION_TIMEOUT")), 3000)
+        setTimeout(() => reject(new Error("SESSION_TIMEOUT")), SESSION_CHECK_TIMEOUT_MS)
       );
       const {
         data: { session },

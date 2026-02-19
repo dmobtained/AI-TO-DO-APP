@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { getSupabaseClient } from '@/lib/supabaseClient'
 import type { Session, User } from '@supabase/supabase-js'
 
-type Role = 'ADMIN' | 'USER' | null
+type Role = 'admin' | 'user' | null
 
 type AuthState = {
   user: User | null
@@ -20,9 +20,9 @@ function isAbortError(e: unknown): boolean {
 }
 
 function getRoleFromMetadata(meta: unknown): Role {
-  if (typeof meta !== 'string') return 'USER'
-  const u = meta.toUpperCase()
-  return u === 'ADMIN' ? 'ADMIN' : 'USER'
+  if (typeof meta !== 'string') return 'user'
+  const u = meta.toLowerCase().trim()
+  return u === 'admin' ? 'admin' : 'user'
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -45,10 +45,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfileRole = useCallback(async (userId: string) => {
     try {
       const { data } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle()
-      return data?.role === 'ADMIN' ? 'ADMIN' : 'USER'
+      const r = data?.role
+      return (r != null && String(r).toLowerCase().trim() === 'admin') ? 'admin' : 'user'
     } catch (e) {
       if (isAbortError(e)) throw e
-      return 'USER'
+      return 'user'
     }
   }, [supabase])
 
@@ -56,35 +57,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true
     let initialFired = false
 
+    async function applySession(s: Session | null) {
+      if (!mounted) return
+      setAuth(s)
+      if (s?.user) {
+        const metaRole = getRoleFromMetadata(s.user.user_metadata?.role)
+        if (metaRole !== 'admin') {
+          try {
+            const profileRole = await fetchProfileRole(s.user.id)
+            if (mounted) setRole(profileRole)
+          } catch (e) {
+            if (!isAbortError(e) && mounted) setRole('user')
+          }
+        }
+      }
+      if (mounted) setLoading(false)
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted || initialFired) return
+      initialFired = true
+      applySession(session)
+    }).catch(() => {
+      if (!mounted || initialFired) return
+      initialFired = true
+      setLoading(false)
+    })
+
     const { data } = supabase.auth.onAuthStateChange(async (_event, s) => {
       if (!mounted) return
       if (!initialFired) {
         initialFired = true
-        setAuth(s)
-        if (s?.user) {
-          const metaRole = getRoleFromMetadata(s.user.user_metadata?.role)
-          if (metaRole !== 'ADMIN') {
-            try {
-              const profileRole = await fetchProfileRole(s.user.id)
-              if (mounted) setRole(profileRole)
-            } catch (e) {
-              if (!isAbortError(e) && mounted) setRole('USER')
-            }
-          }
-        }
-        if (mounted) setLoading(false)
+        await applySession(s)
         return
       }
       try {
         setAuth(s)
-        if (s?.user && getRoleFromMetadata(s.user.user_metadata?.role) !== 'ADMIN') {
+        if (s?.user && getRoleFromMetadata(s.user.user_metadata?.role) !== 'admin') {
           const profileRole = await fetchProfileRole(s.user.id)
           if (mounted) setRole(profileRole)
         }
       } catch (e) {
-        if (!isAbortError(e)) {
-          if (mounted) setRole('USER')
-        }
+        if (!isAbortError(e) && mounted) setRole('user')
       }
     })
 
@@ -94,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         initialFired = true
         setLoading(false)
       }
-    }, 300)
+    }, 2000)
 
     return () => {
       clearTimeout(fallback)

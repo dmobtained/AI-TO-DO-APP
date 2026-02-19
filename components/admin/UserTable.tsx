@@ -3,7 +3,7 @@
 export type AdminUser = {
   id: string
   email: string | null
-  role: 'ADMIN' | 'USER'
+  role: 'admin' | 'user'
 }
 
 type UserTableProps = {
@@ -13,8 +13,8 @@ type UserTableProps = {
   onRoleChange: (user: AdminUser) => void
 }
 
-function RoleBadge({ role }: { role: 'ADMIN' | 'USER' }) {
-  const className = role === 'ADMIN' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-300'
+function RoleBadge({ role }: { role: 'admin' | 'user' }) {
+  const className = role === 'admin' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-300'
   return (
     <span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${className}`}>
       {role}
@@ -64,7 +64,7 @@ export function UserTable({ users, loading, updatingId, onRoleChange }: UserTabl
                     disabled={updatingId === user.id}
                     className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {updatingId === user.id ? 'Bezig…' : user.role === 'ADMIN' ? 'Naar USER' : 'Naar ADMIN'}
+                    {updatingId === user.id ? 'Bezig…' : user.role === 'admin' ? 'Naar user' : 'Naar admin'}
                   </button>
                 </td>
               </tr>

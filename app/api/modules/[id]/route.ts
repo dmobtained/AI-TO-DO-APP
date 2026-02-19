@@ -5,8 +5,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
-async function logActivity(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, action: string) {
-  await supabase.from('activity_log').insert({ user_id: userId, action })
+async function logActivity(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  email: string | null,
+  action: string
+) {
+  await supabase.from('activity_log').insert({
+    actor_user_id: userId,
+    actor_email: email ?? null,
+    action,
+    entity_type: null,
+    entity_id: null,
+    metadata: {},
+  })
 }
 
 export async function PATCH(
@@ -25,7 +37,7 @@ export async function PATCH(
       .select('role')
       .eq('id', user.id)
       .maybeSingle()
-    if (profile?.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if ((profile?.role?.toLowerCase?.() ?? '') !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json().catch(() => ({}))
     const updates: Record<string, unknown> = {}
@@ -53,10 +65,10 @@ export async function PATCH(
     if (error) {
       const alt = await supabaseAdmin.from('modules').update(updates).eq('id', id).select('id, name, status, order_index').single()
       if (alt.error) return NextResponse.json({ error: alt.error.message }, { status: 500 })
-      await logActivity(supabase, user.id, `module_updated:${moduleName}`)
+      await logActivity(supabase, user.id, user.email ?? null, `module_updated:${moduleName}`)
       return NextResponse.json(alt.data)
     }
-    await logActivity(supabase, user.id, `module_updated:${moduleName}`)
+    await logActivity(supabase, user.id, user.email ?? null, `module_updated:${moduleName}`)
     return NextResponse.json(data)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

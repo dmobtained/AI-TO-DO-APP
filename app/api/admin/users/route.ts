@@ -8,7 +8,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 export type AdminUser = {
   id: string
   email: string | null
-  role: 'ADMIN' | 'USER'
+  role: 'admin' | 'user'
 }
 
 export async function GET() {
@@ -19,7 +19,7 @@ export async function GET() {
     if (!supabaseAdmin) return NextResponse.json({ error: 'Admin not configured' }, { status: 503 })
     const metaRole = session.user.user_metadata?.role
     const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', session.user.id).maybeSingle()
-    const isAdmin = (typeof metaRole === 'string' && metaRole.toUpperCase() === 'ADMIN') || profile?.role === 'ADMIN'
+    const isAdmin = (typeof metaRole === 'string' && metaRole.toLowerCase().trim() === 'admin') || (profile?.role?.toLowerCase?.() ?? '') === 'admin'
     if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 })
@@ -36,11 +36,14 @@ export async function GET() {
       return NextResponse.json({ error: profilesError.message }, { status: 500 })
     }
 
-    const profileById = new Map<string, 'ADMIN' | 'USER'>((profiles ?? []).map((p) => [p.id, p.role === 'ADMIN' ? 'ADMIN' : 'USER']))
+    const profileById = new Map<string, 'admin' | 'user'>((profiles ?? []).map((p) => {
+      const r = (p.role ?? 'user').toString().toLowerCase().trim()
+      return [p.id, r === 'admin' ? 'admin' : 'user'] as const
+    }))
     const users: AdminUser[] = (authData?.users ?? []).map((u) => ({
       id: u.id,
       email: u.email ?? null,
-      role: profileById.get(u.id) ?? 'USER',
+      role: profileById.get(u.id) ?? 'user',
     }))
 
     return NextResponse.json({ users })

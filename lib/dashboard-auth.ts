@@ -37,22 +37,23 @@ export async function getDashboardAuth(): Promise<DashboardAuthResult> {
   }
 
   const metaRole = user.user_metadata?.role
-  const roleFromMeta = typeof metaRole === 'string' && metaRole.toUpperCase() === 'ADMIN' ? 'admin' : 'user'
+  const roleFromMeta = typeof metaRole === 'string' && metaRole.toLowerCase().trim() === 'admin' ? 'admin' : 'user'
 
   let role: 'admin' | 'user' = roleFromMeta
   let profileEmail: string | null = user.email ?? null
-  const profileName: string | null = (user.user_metadata?.full_name as string) ?? (user.user_metadata?.name as string) ?? null
+  let profileName: string | null = (user.user_metadata?.full_name as string) ?? (user.user_metadata?.name as string) ?? null
 
   try {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, email')
+      .select('role, email, full_name')
       .eq('id', user.id)
       .maybeSingle()
 
     if (profile) {
-      if (roleFromMeta !== 'admin') role = profile.role === 'ADMIN' ? 'admin' : 'user'
+      if (roleFromMeta !== 'admin') role = (profile.role?.toLowerCase?.() ?? '') === 'admin' ? 'admin' : 'user'
       if (profile.email != null) profileEmail = profile.email
+      if (profile.full_name != null && String(profile.full_name).trim()) profileName = String(profile.full_name).trim()
     }
   } catch {
     // profiles table missing or RLS: keep role from metadata

@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --dd-navy: #1e2b44;
-  --dd-navy-dark: #162136;
-  --dd-navy-card: #243557;
+  --dd-navy: #253548;
+  --dd-navy-dark: #1c2d42;
+  --dd-navy-card: #2a3d5c;
   --dd-orange: #f7931e;
   --dd-teal: #2ec4b6;
   --dd-white: #f4f6f8;
@@ -19,6 +19,14 @@ body {
 
 .text-secondary {
   opacity: 0.7;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @layer components {

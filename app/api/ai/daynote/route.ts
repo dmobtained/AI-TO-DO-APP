@@ -42,12 +42,6 @@ export async function POST() {
     }
 
     const tasks = (tasksData ?? []) as { title: string; status: string; due_date: string | null }[]
-    if (tasks.length === 0) {
-      return NextResponse.json(
-        { error: 'Geen open taken beschikbaar.' },
-        { status: 400 }
-      )
-    }
 
     const payload = {
       type: 'daynote',

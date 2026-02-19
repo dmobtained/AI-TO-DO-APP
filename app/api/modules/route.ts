@@ -33,9 +33,9 @@ function toModuleRow(r: RawModule): ModuleRow {
   }
 }
 
-function getRole(userId: string, metaRole: unknown): 'ADMIN' | 'USER' {
-  const m = typeof metaRole === 'string' && metaRole.toUpperCase() === 'ADMIN' ? 'ADMIN' : null
-  return m ?? 'USER'
+function getRole(_userId: string, metaRole: unknown): 'admin' | 'user' {
+  const m = typeof metaRole === 'string' && metaRole.toLowerCase().trim() === 'admin' ? 'admin' : null
+  return m ?? 'user'
 }
 
 export async function GET(request: NextRequest) {
@@ -53,9 +53,9 @@ export async function GET(request: NextRequest) {
       .select('role')
       .eq('id', user.id)
       .maybeSingle()
-    const roleFromProfile = profile?.role === 'ADMIN' ? 'ADMIN' : 'USER'
+    const roleFromProfile = (profile?.role?.toLowerCase?.() ?? '') === 'admin' ? 'admin' : 'user'
     const metaRole = user.user_metadata?.role
-    const isAdmin = (typeof metaRole === 'string' && metaRole.toUpperCase() === 'ADMIN') || roleFromProfile === 'ADMIN'
+    const isAdmin = (typeof metaRole === 'string' && metaRole.toLowerCase().trim() === 'admin') || roleFromProfile === 'admin'
 
     const url = new URL(request.url)
     const forAdmin = url.searchParams.get('admin') === '1'

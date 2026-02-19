@@ -59,10 +59,14 @@ export function buildFeatureFlags(rows: RawModuleRow[]): FeatureFlags {
   return flags
 }
 
+/** Core modules: always visible for all users (admin and user). */
+const CORE_FEATURE_KEYS: FeatureKey[] = ['dashboard_tasks_list', 'email_module', 'finance_module']
+
 /**
- * For admin: can see all features. For user: only if flag is true.
+ * For admin: can see all features. For user: core modules always, others only if flag is true.
  */
 export function canSeeFeature(flags: FeatureFlags, key: FeatureKey, isAdmin: boolean): boolean {
   if (isAdmin) return true
+  if (CORE_FEATURE_KEYS.includes(key)) return true
   return flags[key] === true
 }

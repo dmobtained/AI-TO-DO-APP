@@ -43,7 +43,7 @@ create policy "modules_select_authenticated"
   to authenticated
   using (true);
 
--- Update: allow only admin (user_metadata.role = 'ADMIN' or 'admin')
+-- Update: allow only admin (user_metadata.role = 'admin' canonical)
 drop policy if exists "modules_update_admin" on public.modules;
 create policy "modules_update_admin"
   on public.modules for update
