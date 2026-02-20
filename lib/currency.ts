@@ -1,13 +1,16 @@
 /**
- * Currency list and exchange rate helpers. TTL 60 min cache in localStorage.
+ * Currency list (40+ codes) and exchange rate helpers.
+ * Live rates via API with fallback to mock data.
  */
+
+export type CurrencyCode = string
 
 export type CurrencyItem = { code: string; name: string }
 
 export const currencyList: CurrencyItem[] = [
+  { code: 'EUR', name: 'Euro' },
   { code: 'USD', name: 'US Dollar' },
   { code: 'GBP', name: 'British Pound' },
-  { code: 'EUR', name: 'Euro' },
   { code: 'JPY', name: 'Japanese Yen' },
   { code: 'CHF', name: 'Swiss Franc' },
   { code: 'CAD', name: 'Canadian Dollar' },
@@ -45,81 +48,130 @@ export const currencyList: CurrencyItem[] = [
   { code: 'VND', name: 'Vietnamese Dong' },
   { code: 'ARS', name: 'Argentine Peso' },
   { code: 'CLP', name: 'Chilean Peso' },
+  { code: 'RUB', name: 'Russian Ruble' },
+  { code: 'COP', name: 'Colombian Peso' },
+  { code: 'PEN', name: 'Peruvian Sol' },
 ]
 
-const CACHE_KEY = 'currency_rates_'
-const TTL_MS = 60 * 60 * 1000
+export type RatesMap = Record<string, number>
 
-export type RatesResult = { rates: Record<string, number>; timestamp: number; base: string }
+const MOCK_RATES: RatesMap = {
+  EUR: 1,
+  USD: 1.08,
+  GBP: 0.86,
+  JPY: 161,
+  CHF: 0.95,
+  CAD: 1.47,
+  AUD: 1.65,
+  NZD: 1.78,
+  SEK: 11.2,
+  NOK: 11.6,
+  DKK: 7.46,
+  PLN: 4.31,
+  CZK: 25.1,
+  HUF: 395,
+  TRY: 34.5,
+  ZAR: 20.2,
+  MXN: 18.5,
+  BRL: 5.38,
+  INR: 89.5,
+  IDR: 16900,
+  SGD: 1.45,
+  HKD: 8.45,
+  CNY: 7.82,
+  KRW: 1440,
+  THB: 38.2,
+  MYR: 5.12,
+  AED: 3.97,
+  SAR: 4.05,
+  QAR: 3.94,
+  KWD: 0.33,
+  EGP: 33.2,
+  ILS: 4.0,
+  RON: 4.97,
+  BGN: 1.96,
+  HRK: 7.53,
+  ISK: 149,
+  PHP: 60.5,
+  VND: 26600,
+  ARS: 925,
+  CLP: 985,
+  RUB: 99.5,
+  COP: 4250,
+  PEN: 4.08,
+}
 
-export function getCachedRates(base: string): RatesResult | null {
+const CACHE_KEY = 'currency_rates_cache'
+const CACHE_TTL_MS = 30 * 60 * 1000 // 30 min
+
+type CacheEntry = { rates: RatesMap; base: string; at: number }
+
+function getCachedRates(base: string): RatesMap | null {
   if (typeof window === 'undefined') return null
   try {
-    const raw = localStorage.getItem(CACHE_KEY + base)
+    const raw = localStorage.getItem(CACHE_KEY)
     if (!raw) return null
-    const data = JSON.parse(raw) as RatesResult
-    if (Date.now() - data.timestamp > TTL_MS) return null
-    return data
+    const entry: CacheEntry = JSON.parse(raw)
+    if (entry.base !== base || Date.now() - entry.at > CACHE_TTL_MS) return null
+    return entry.rates
   } catch {
     return null
   }
 }
 
-export function setCachedRates(base: string, data: RatesResult): void {
+function setCachedRates(base: string, rates: RatesMap): void {
   if (typeof window === 'undefined') return
   try {
-    localStorage.setItem(CACHE_KEY + base, JSON.stringify(data))
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ base, rates, at: Date.now() }))
   } catch {
     // ignore
   }
 }
 
-const FALLBACK_RATES: Record<string, Record<string, number>> = {
-  EUR: {
-    USD: 1.08, GBP: 0.86, JPY: 161, CHF: 0.95, CAD: 1.46, AUD: 1.65, NZD: 1.78, SEK: 11.2, NOK: 11.5, DKK: 7.46,
-    PLN: 4.31, CZK: 25.1, HUF: 395, TRY: 34.5, ZAR: 20.2, MXN: 18.4, BRL: 5.42, INR: 89.8, IDR: 16900, SGD: 1.45,
-    HKD: 8.45, CNY: 7.78, KRW: 1440, THB: 38.5, MYR: 5.12, AED: 3.97, SAR: 4.05, QAR: 3.94, KWD: 0.33, EGP: 33.3,
-    ILS: 4.02, RON: 4.97, BGN: 1.96, HRK: 7.53, ISK: 149, PHP: 60.5, VND: 26600, ARS: 935, CLP: 1050, EUR: 1,
-  },
-}
-
-const FRANKFURTER_URL = 'https://api.frankfurter.dev/v1/latest'
-
-export async function fetchRates(base: string): Promise<RatesResult> {
+/**
+ * Fetch live rates for base currency. Returns mock if API fails.
+ */
+export async function fetchRates(base: string): Promise<{ rates: RatesMap; updatedAt: number }> {
   const cached = getCachedRates(base)
-  if (cached) return cached
+  if (cached) return { rates: cached, updatedAt: Date.now() }
+
   try {
     const res = await fetch(
-      `${FRANKFURTER_URL}?from=${encodeURIComponent(base)}`
+      `https://api.frankfurter.app/latest?from=${encodeURIComponent(base)}&to=${currencyList.map((c) => c.code).filter((c) => c !== base).join(',')}`
     )
+    if (!res.ok) throw new Error('API error')
     const data = await res.json()
-    if (data?.rates && typeof data.rates === 'object') {
-      const rates = data.rates as Record<string, number>
-      const result: RatesResult = {
-        base: data.base ?? base,
-        rates: { ...rates, [base]: 1 },
-        timestamp: Date.now(),
-      }
-      setCachedRates(base, result)
-      return result
+    const rates: RatesMap = { [base]: 1 }
+    if (data.rates && typeof data.rates === 'object') {
+      Object.assign(rates, data.rates)
     }
+    setCachedRates(base, rates)
+    return { rates, updatedAt: Date.now() }
   } catch {
-    // fallback
+    const rates: RatesMap = {}
+    currencyList.forEach((c) => {
+      if (MOCK_RATES[c.code] != null && MOCK_RATES[base] != null)
+        rates[c.code] = MOCK_RATES[c.code] / MOCK_RATES[base]
+      else if (c.code === base) rates[c.code] = 1
+      else rates[c.code] = MOCK_RATES[c.code] ?? 1
+    })
+    if (!rates[base]) rates[base] = 1
+    return { rates, updatedAt: Date.now() }
   }
-  const fallback = FALLBACK_RATES[base] ?? FALLBACK_RATES.EUR
-  return { base, rates: { ...fallback, [base]: 1 }, timestamp: Date.now() }
 }
 
+/**
+ * Convert amount from one currency to another using rates map.
+ */
 export function convert(
   amount: number,
   from: string,
   to: string,
-  rates: Record<string, number>,
-  base: string
+  rates: RatesMap
 ): number {
   if (from === to) return amount
-  const fromRate = from === base ? 1 : rates[from]
-  const toRate = to === base ? 1 : rates[to]
-  if (fromRate == null || toRate == null) return 0
-  return (amount / fromRate) * toRate
+  const fromRate = rates[from] ?? 1
+  const toRate = rates[to] ?? 1
+  if (toRate === 0) return amount
+  return (amount * toRate) / fromRate
 }

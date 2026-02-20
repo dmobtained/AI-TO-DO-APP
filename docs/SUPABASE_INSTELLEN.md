@@ -20,6 +20,10 @@ Voer het SQL van elk bestand uit, van oud naar nieuw:
 | 8 | `supabase/migrations/20250220000001_notes.sql` | Tabel **notes** + RLS (notities-module) |
 | 9 | `supabase/migrations/20250221000000_missing_tables.sql` | **profiles** (bsn, iban, length_cm, weight_kg), **tasks**, **finance_entries** (incl. category), **emails**, **settings**, **modules** (aanvullend), **ai_notes**, **auto_entries**, **leads**, **meeting_notes** + RLS |
 | 10 | `supabase/migrations/20250222000000_auto_odometer_kenteken.sql` | **auto_entries**: kolom `odometer_km` toevoegen indien ontbreekt. **profiles**: kolom `kenteken` (nummerplaat) |
+| 11 | `supabase/migrations/20250223000000_profiles_rls_no_recursion.sql` | **profiles** RLS: alle policies vervangen door alleen eigen rij (geen oneindige recursie) |
+| 12 | `supabase/migrations/20250224000000_activity_logs_view.sql` | View **activity_logs** als alias voor **activity_log** (verhelpt fout "relation activity_logs does not exist") |
+
+**Let op:** Als je de fout "relation public.activity_logs does not exist" of "infinite recursion in policy for relation profiles" ziet, voer migratie 11 en 12 uit.
 
 **Let op:** Als je de fout "Could not find the 'odometer_km' column of 'auto_entries'" ziet bij Auto, voer dan migratie 10 uit (of opnieuw migratie 9 als de tabel zonder die kolom was aangemaakt).
 

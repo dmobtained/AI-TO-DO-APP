@@ -13,7 +13,7 @@ export async function GET(request: Request) {
 
   let q = supabase
     .from('auto_entries')
-    .select('id, user_id, type, title, amount, entry_date, notes, odometer_km, created_at')
+    .select('id, user_id, type, title, amount, entry_date, notes, odometer_km, liters, created_at')
     .eq('user_id', user.id)
     .order('entry_date', { ascending: false })
 
@@ -39,6 +39,7 @@ export async function POST(request: Request) {
   const entry_date = body.entry_date as string
   const notes = body.notes != null ? String(body.notes).trim() : null
   const odometer_km = body.odometer_km != null ? parseInt(String(body.odometer_km), 10) : null
+  const liters = body.liters != null ? parseFloat(String(body.liters)) : null
 
   if (Number.isNaN(amount) || amount < 0) {
     return NextResponse.json({ error: 'Ongeldig bedrag' }, { status: 400 })
@@ -57,8 +58,9 @@ export async function POST(request: Request) {
       entry_date,
       notes: notes || null,
       odometer_km: Number.isNaN(odometer_km) ? null : odometer_km,
+      liters: liters != null && !Number.isNaN(liters) ? liters : null,
     })
-    .select('id, user_id, type, title, amount, entry_date, notes, odometer_km, created_at')
+    .select('id, user_id, type, title, amount, entry_date, notes, odometer_km, liters, created_at')
     .single()
 
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 })

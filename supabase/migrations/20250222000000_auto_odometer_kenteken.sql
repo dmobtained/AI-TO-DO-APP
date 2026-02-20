@@ -1,6 +1,12 @@
--- Zorg dat auto_entries.odometer_km bestaat (schema cache / bestaande tabellen)
+-- Zorg dat alle benodigde kolommen op auto_entries bestaan (schema cache / bestaande tabellen)
 DO $$
 BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'auto_entries' AND column_name = 'title') THEN
+    ALTER TABLE public.auto_entries ADD COLUMN title text NOT NULL DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'auto_entries' AND column_name = 'notes') THEN
+    ALTER TABLE public.auto_entries ADD COLUMN notes text;
+  END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'auto_entries' AND column_name = 'odometer_km') THEN
     ALTER TABLE public.auto_entries ADD COLUMN odometer_km int;
   END IF;

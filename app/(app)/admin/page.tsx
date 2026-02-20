@@ -117,7 +117,7 @@ export default function AdminPage() {
   if (authLoading || (!role && !authLoading)) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-slate-500 text-sm">Laden...</p>
+        <p className="text-textSecondary text-sm">Laden...</p>
       </div>
     )
   }
@@ -128,7 +128,7 @@ export default function AdminPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <h1 className="text-xl font-semibold text-slate-900">Admin</h1>
+      <h1 className="text-2xl font-semibold text-textPrimary">Admin</h1>
       <Tabs defaultValue="activity">
         <TabsList>
           <TabsTrigger value="activity">
@@ -145,7 +145,7 @@ export default function AdminPage() {
         <TabsContent value="activity">
           <Card className="p-6">
             <CardHeader className="p-0 pb-4">
-              <CardTitle className="text-slate-900">Activity log</CardTitle>
+              <CardTitle className="text-textPrimary">Activity log</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="flex flex-wrap gap-2 mb-4">
@@ -153,11 +153,11 @@ export default function AdminPage() {
                 <Input placeholder="Actor user id / email" value={actorFilter} onChange={(e) => setActorFilter(e.target.value)} className="max-w-xs" />
               </div>
               {activityLoading ? (
-                <p className="text-slate-500 text-sm">Laden…</p>
+                <p className="text-textSecondary text-sm">Laden…</p>
               ) : filteredActivity.length === 0 ? (
-                <p className="text-slate-500 text-sm">Geen events.</p>
+                <p className="text-textSecondary text-sm">Geen events.</p>
               ) : (
-                <div className="overflow-auto max-h-[500px] rounded-xl border border-[#e5e7eb]">
+                <div className="overflow-auto max-h-[500px] rounded-[14px] border border-border">
                   <ActivityTable rows={filteredActivity} />
                 </div>
               )}
@@ -168,7 +168,7 @@ export default function AdminPage() {
         <TabsContent value="users">
           <Card className="p-6">
             <CardHeader className="p-0 pb-4">
-              <CardTitle className="text-slate-900">Gebruikersbeheer</CardTitle>
+              <CardTitle className="text-textPrimary">Gebruikersbeheer</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <UserTable users={users} loading={loading} updatingId={updatingId} onRoleChange={handleRoleChange} />
@@ -179,13 +179,13 @@ export default function AdminPage() {
         <TabsContent value="system">
           <Card className="p-6">
             <CardHeader className="p-0 pb-4">
-              <CardTitle className="text-slate-900">Systeeminfo</CardTitle>
+              <CardTitle className="text-textPrimary">Systeeminfo</CardTitle>
             </CardHeader>
-            <CardContent className="p-0 text-slate-600 text-sm space-y-3">
-              <p><span className="font-medium text-slate-700">Omgeving:</span> {typeof window !== 'undefined' ? (process.env.NODE_ENV ?? 'development') : '—'}</p>
-              <p><span className="font-medium text-slate-700">Supabase:</span> Geconfigureerd via NEXT_PUBLIC_SUPABASE_URL (controleer .env).</p>
-              <p><span className="font-medium text-slate-700">AI / Dagnotitie:</span> N8N_AI_HUB_WEBHOOK of NEXT_PUBLIC_N8N_AI_HUB_WEBHOOK in .env voor dagnotitie.</p>
-              <p className="pt-2 border-t border-[#e5e7eb] text-slate-500">Geen extra systeeminstellingen in deze versie. Modules en locks beheer je via de database of bestaande flows.</p>
+            <CardContent className="p-0 text-textSecondary text-sm space-y-3">
+              <p><span className="font-medium text-textPrimary">Omgeving:</span> {typeof window !== 'undefined' ? (process.env.NODE_ENV ?? 'development') : '—'}</p>
+              <p><span className="font-medium text-textPrimary">Supabase:</span> Geconfigureerd via NEXT_PUBLIC_SUPABASE_URL (controleer .env).</p>
+              <p><span className="font-medium text-textPrimary">AI / Dagnotitie:</span> N8N_AI_HUB_WEBHOOK of NEXT_PUBLIC_N8N_AI_HUB_WEBHOOK in .env voor dagnotitie.</p>
+              <p className="pt-2 border-t border-border text-textSecondary">Geen extra systeeminstellingen in deze versie. Modules en locks beheer je via de database of bestaande flows.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -198,28 +198,28 @@ function ActivityTable({ rows }: { rows: ActivityRow[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   return (
     <table className="w-full text-sm">
-      <thead className="sticky top-0 bg-slate-50 border-b border-[#e5e7eb] z-10">
+      <thead className="sticky top-0 bg-card border-b border-border z-10">
         <tr className="text-left">
-          <th className="px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Action</th>
-          <th className="px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Entity</th>
-          <th className="px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
-          <th className="px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
-          <th className="px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Metadata</th>
+          <th className="px-6 py-3 text-xs font-medium text-textSecondary uppercase tracking-wider">Action</th>
+          <th className="px-6 py-3 text-xs font-medium text-textSecondary uppercase tracking-wider">Entity</th>
+          <th className="px-6 py-3 text-xs font-medium text-textSecondary uppercase tracking-wider">User</th>
+          <th className="px-6 py-3 text-xs font-medium text-textSecondary uppercase tracking-wider">Date</th>
+          <th className="px-6 py-3 text-xs font-medium text-textSecondary uppercase tracking-wider">Metadata</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-[#e5e7eb] bg-white">
+      <tbody className="divide-y divide-border bg-background">
         {rows.map((row) => (
           <React.Fragment key={row.id}>
-            <tr className="hover:bg-slate-50/50">
-              <td className="px-6 py-4 text-slate-900 font-medium">{row.action}</td>
-              <td className="px-6 py-4 text-slate-600">
+            <tr className="hover:bg-hover">
+              <td className="px-6 py-4 text-textPrimary font-medium">{row.action}</td>
+              <td className="px-6 py-4 text-textSecondary">
                 {row.entity_type ?? '—'} {row.entity_id ? `(${String(row.entity_id).slice(0, 8)})` : ''}
               </td>
-              <td className="px-6 py-4 text-slate-600">{row.actor_email ?? row.actor_user_id.slice(0, 8)}</td>
-              <td className="px-6 py-4 text-slate-600 whitespace-nowrap">{new Date(row.created_at).toLocaleString('nl-NL')}</td>
+              <td className="px-6 py-4 text-textSecondary">{row.actor_email ?? row.actor_user_id.slice(0, 8)}</td>
+              <td className="px-6 py-4 text-textSecondary whitespace-nowrap">{new Date(row.created_at).toLocaleString('nl-NL')}</td>
               <td className="px-6 py-4">
                 {Object.keys(row.metadata ?? {}).length > 0 ? (
-                  <button type="button" onClick={() => setExpandedId(expandedId === row.id ? null : row.id)} className="text-[#2563eb] hover:underline text-xs">
+                  <button type="button" onClick={() => setExpandedId(expandedId === row.id ? null : row.id)} className="text-primary hover:underline text-xs">
                     {expandedId === row.id ? 'Sluiten' : 'Bekijk JSON'}
                   </button>
                 ) : (
@@ -229,8 +229,8 @@ function ActivityTable({ rows }: { rows: ActivityRow[] }) {
             </tr>
             {expandedId === row.id && (
               <tr>
-                <td colSpan={5} className="px-6 py-3 bg-slate-50 border-b border-[#e5e7eb]">
-                  <pre className="text-xs text-slate-700 overflow-x-auto whitespace-pre-wrap font-mono">{JSON.stringify(row.metadata ?? {}, null, 2)}</pre>
+                <td colSpan={5} className="px-6 py-3 bg-hover border-b border-border">
+                  <pre className="text-xs text-textPrimary overflow-x-auto whitespace-pre-wrap font-mono">{JSON.stringify(row.metadata ?? {}, null, 2)}</pre>
                 </td>
               </tr>
             )}

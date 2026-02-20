@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -8,6 +8,7 @@ import type { FeatureFlags } from '@/lib/feature-flags'
 import type { ModuleStatus } from '@/lib/dashboard-auth'
 import { DashboardProvider } from '@/context/DashboardContext'
 import { getSidebarItems } from '@/lib/sidebar-config'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react'
 
 type AppShellProps = {
@@ -35,6 +36,9 @@ export function AppShell({
   const [currentTime, setCurrentTime] = useState('')
   const [mounted, setMounted] = useState(false)
   const [financienOpen, setFinancienOpen] = useState(false)
+  const [instellingenOpen, setInstellingenOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -60,6 +64,26 @@ export function AppShell({
     if (pathname.startsWith('/dashboard/financien')) setFinancienOpen(true)
   }, [pathname])
 
+  useEffect(() => {
+    if (pathname.startsWith('/dashboard/instellingen') || pathname.startsWith('/notities')) setInstellingenOpen(true)
+  }, [pathname])
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) setUserMenuOpen(false)
+    }
+    if (userMenuOpen) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [userMenuOpen])
+
+  const handleSignOut = async () => {
+    setUserMenuOpen(false)
+    await getSupabaseClient().auth.signOut()
+    router.push('/')
+  }
+
   const items = getSidebarItems(role)
   const displayName =
     profileName ??
@@ -72,36 +96,40 @@ export function AppShell({
 
   if (!session) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#f4f6f8]">
+      <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex animate-pulse flex-col items-center gap-3">
-          <div className="h-8 w-48 rounded-xl bg-slate-200" />
-          <div className="h-4 w-32 rounded-xl bg-slate-200" />
+          <div className="h-8 w-48 rounded-[14px] bg-border" />
+          <div className="h-4 w-32 rounded-[14px] bg-border" />
         </div>
       </div>
     )
   }
 
+  const linkBase = 'flex min-w-0 flex-1 items-center gap-3 rounded-[10px] px-2 py-2.5 text-left text-sm font-medium transition-all duration-[180ms]'
+  const linkDefault = 'text-primary/90 hover:bg-white/20 hover:text-textPrimary'
+  const linkActive = 'bg-white/25 text-textPrimary font-semibold border-l-[3px] border-l-primary'
+
   return (
-    <div className="flex h-screen bg-[#f4f6f8] text-[#0f172a] antialiased">
+    <div className="flex h-screen bg-background text-textPrimary antialiased transition-all duration-[180ms]">
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-20 bg-black/30 md:hidden"
           onClick={() => setSidebarOpen(false)}
           aria-hidden
         />
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-30 flex h-full w-60 flex-col border-r border-white/10 bg-[#111827] shadow-lg transition-transform duration-200 ease-in-out md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-30 flex h-full w-[240px] flex-col border-r border-primary/20 bg-primarySoft transition-transform duration-[180ms] ease-out md:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         <div className="flex flex-1 flex-col min-h-0">
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 px-4">
-            <span className="text-lg font-semibold tracking-wide text-white">DATADENKT</span>
+          <div className="flex h-14 shrink-0 items-center justify-between border-b border-primary/20 px-4">
+            <span className="text-lg font-semibold tracking-wide text-primary">DATADENKT</span>
             <button
               type="button"
-              className="rounded-xl p-2 text-white/70 hover:bg-white/5 hover:text-white md:hidden"
+              className="rounded-[10px] p-2 text-primary/90 hover:bg-white/20 hover:text-textPrimary md:hidden transition-colors duration-[180ms]"
               onClick={() => setSidebarOpen(false)}
               aria-label="Menu sluiten"
             >
@@ -112,7 +140,8 @@ export function AppShell({
             {items.map((item) => {
               const hasChildren = item.children && item.children.length > 0
               const isFinancien = item.path === '/dashboard/financien'
-              const isOpen = isFinancien ? financienOpen : false
+              const isInstellingen = item.path === '/dashboard/instellingen'
+              const isOpen = isFinancien ? financienOpen : isInstellingen ? instellingenOpen : false
               const isActive =
                 pathname === item.path ||
                 (item.path !== '/dashboard' && pathname.startsWith(item.path))
@@ -125,26 +154,27 @@ export function AppShell({
                     <div className="flex min-w-0 items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => isFinancien && setFinancienOpen((o) => !o)}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/70 hover:bg-white/5 hover:text-white"
+                        onClick={() => {
+                          if (isFinancien) setFinancienOpen((o) => !o)
+                          if (isInstellingen) setInstellingenOpen((o) => !o)
+                        }}
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-primary/90 hover:bg-white/20 hover:text-textPrimary transition-colors duration-[180ms]"
                         aria-expanded={isOpen}
-                        aria-label={isOpen ? 'Financiën submenu sluiten' : 'Financiën submenu openen'}
+                        aria-label={isOpen ? 'Submenu sluiten' : 'Submenu openen'}
                       >
                         {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                       </button>
                       <Link
                         href={item.path}
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left text-sm font-medium text-white transition-all ${
-                          isAdminItem ? 'opacity-75' : ''
-                        } ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                        className={`${linkBase} ${isAdminItem ? 'opacity-90' : ''} ${isActive ? linkActive : linkDefault}`}
                       >
                         <Icon className="h-5 w-5 shrink-0" />
                         <span className="truncate">{item.label}</span>
                       </Link>
                     </div>
                     {isOpen && item.children && (
-                      <div className="ml-4 flex flex-col border-l border-white/10 pl-3">
+                      <div className="ml-4 flex flex-col border-l border-border pl-3">
                         {item.children.map((sub) => {
                           const subActive = pathname === sub.path
                           return (
@@ -152,8 +182,8 @@ export function AppShell({
                               key={sub.path}
                               href={sub.path}
                               onClick={() => setSidebarOpen(false)}
-                              className={`mt-0.5 rounded-lg px-2 py-2 text-sm text-white/90 transition-colors hover:bg-white/5 hover:text-white ${
-                                subActive ? 'bg-white/10 font-medium text-white' : ''
+                              className={`mt-0.5 rounded-[10px] px-2 py-2 text-sm transition-colors duration-[180ms] hover:bg-white/20 ${
+                                subActive ? 'bg-white/25 font-semibold text-textPrimary' : 'text-primary/90 hover:text-textPrimary'
                               }`}
                             >
                               {sub.label}
@@ -171,9 +201,7 @@ export function AppShell({
                   key={item.path}
                   href={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-white transition-all ${
-                    isAdminItem ? 'opacity-75' : ''
-                  } ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                  className={`${linkBase} ${isAdminItem ? 'opacity-90' : ''} ${isActive ? linkActive : linkDefault}`}
                 >
                   <Icon className="h-5 w-5 shrink-0" />
                   <span className="truncate">{item.label}</span>
@@ -184,8 +212,8 @@ export function AppShell({
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col pl-0 md:pl-60">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-[#e5e7eb] bg-white px-4 shadow-sm md:px-6">
+      <div className="flex min-w-0 flex-1 flex-col pl-0 md:pl-[240px]">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-4 md:px-6">
           <div className="flex min-w-0 items-center gap-4">
             <Link href="/dashboard" className="flex shrink-0 items-center" aria-label="DataDenkt home">
               <Image
@@ -199,36 +227,84 @@ export function AppShell({
             </Link>
             <button
               type="button"
-              className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 md:hidden"
+              className="rounded-[10px] p-2 text-textSecondary hover:bg-hover hover:text-textPrimary md:hidden transition-colors duration-[180ms]"
               onClick={() => setSidebarOpen(true)}
               aria-label="Menu openen"
             >
               <Menu className="h-6 w-6" />
             </button>
             {pathname !== '/dashboard' && (
-              <p className="truncate text-sm font-semibold text-slate-900">{displayName ? `Welkom, ${displayName}` : 'Welkom'}</p>
+              <p className="truncate text-sm font-semibold text-textPrimary">{displayName ? `Welkom, ${displayName}` : 'Welkom'}</p>
             )}
-            <span className="tabular-nums text-sm text-slate-500" suppressHydrationWarning>
+            <span className="tabular-nums text-sm text-textSecondary" suppressHydrationWarning>
               {mounted ? currentTime : '--:--'}
             </span>
           </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <span className="max-w-[120px] truncate text-xs text-slate-500 md:max-w-[180px]" title={email}>
+          <div className="flex shrink-0 items-center gap-3" ref={userMenuRef}>
+            <span className="max-w-[120px] truncate text-xs text-textSecondary md:max-w-[180px]" title={email}>
               {email}
             </span>
-            <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2563eb] font-medium text-white">
-              {(displayName ?? email).slice(0, 1).toUpperCase()}
-            </span>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((o) => !o)}
+                className="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 focus:ring-offset-background"
+                aria-expanded={userMenuOpen}
+                aria-haspopup="true"
+                aria-label="Gebruikersmenu"
+              >
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary font-medium text-white">
+                  {(displayName ?? email).slice(0, 1).toUpperCase()}
+                </span>
+              </button>
+              {userMenuOpen && (
+                <>
+                  <div className="absolute right-2 top-full z-50 h-0 w-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-card" style={{ marginTop: '2px' }} aria-hidden />
+                  <div
+                    className="absolute right-0 top-full z-50 mt-2 w-48 rounded-[14px] border border-border bg-card py-1 shadow-md"
+                    role="menu"
+                  >
+                    <div className="px-4 py-2.5 border-b border-border text-sm font-medium text-textPrimary">
+                      {displayName ?? email}
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-2.5 text-sm text-textSecondary hover:bg-hover hover:text-textPrimary transition-colors duration-[180ms]"
+                      role="menuitem"
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/persoonlijke-info"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-2.5 text-sm text-textSecondary hover:bg-hover hover:text-textPrimary transition-colors duration-[180ms]"
+                      role="menuitem"
+                    >
+                      Persoonsgegevens
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="block w-full px-4 py-2.5 text-left text-sm text-textSecondary hover:bg-hover hover:text-textPrimary transition-colors duration-[180ms]"
+                      role="menuitem"
+                    >
+                      Uitloggen
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
             <span
-              className={`hidden rounded-lg border px-2 py-0.5 text-xs font-medium sm:inline-flex ${
-                role === 'admin' ? 'border-[#2563eb]/30 bg-[#2563eb]/10 text-[#2563eb]' : 'border-slate-200 bg-slate-50 text-slate-600'
+              className={`hidden rounded-[10px] border px-2 py-0.5 text-xs font-medium sm:inline-flex ${
+                role === 'admin' ? 'border-primary/40 bg-primarySoft text-primary' : 'border-border bg-hover text-textSecondary'
               }`}
             >
               {role === 'admin' ? 'admin' : 'user'}
             </span>
           </div>
         </header>
-        <main className="flex-1 overflow-auto bg-[#f4f6f8] p-6 md:p-8">
+        <main className="flex-1 overflow-auto bg-background p-8">
           <DashboardProvider flags={flags} role={role} profileName={displayName ?? profileEmail ?? session?.user.email ?? null}>
             <div className="animate-fade-in">{children}</div>
           </DashboardProvider>

@@ -2,24 +2,56 @@
 
 import { forwardRef } from 'react'
 
-const cardClass =
-  'rounded-2xl bg-white shadow-sm border border-[#e5e7eb] transition-all duration-200 hover:shadow-md'
+type CardProps = React.HTMLAttributes<HTMLDivElement> & {
+  variant?: 'default' | 'hero'
+  hoverLift?: boolean
+}
 
-export const Card = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className = '', ...props }, ref) => (
-    <div ref={ref} className={`${cardClass} ${className}`} {...props} />
-  )
+const baseCardClass =
+  'rounded-[14px] bg-card border border-border shadow-sm transition-all duration-[180ms] ease-out p-5'
+
+export const Card = forwardRef<HTMLDivElement, CardProps>(
+  ({ className = '', variant = 'default', hoverLift = true, ...props }, ref) => {
+    const variantClass = variant === 'hero'
+      ? 'bg-primarySoft border-l-4 border-l-primary p-6'
+      : ''
+    const liftClass = hoverLift
+      ? 'hover:-translate-y-0.5 hover:shadow-md'
+      : ''
+    return (
+      <div
+        ref={ref}
+        className={`${baseCardClass} ${variantClass} ${liftClass} ${className}`}
+        {...props}
+      />
+    )
+  }
 )
 Card.displayName = 'Card'
 
 export function CardHeader({ className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={`px-6 py-4 border-b border-[#e5e7eb] ${className}`} {...props} />
+  return (
+    <div
+      className={`pb-4 border-b border-border ${className}`}
+      {...props}
+    />
+  )
 }
 
-export function CardTitle({ className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={`text-xl font-semibold text-slate-900 ${className}`} {...props} />
+export function CardTitle({
+  className = '',
+  variant = 'default',
+  ...props
+}: React.HTMLAttributes<HTMLHeadingElement> & { variant?: 'default' | 'hero' }) {
+  const sizeClass = variant === 'hero' ? 'text-[20px]' : 'text-lg'
+  return (
+    <h2
+      className={`font-semibold text-textPrimary ${sizeClass} ${className}`}
+      {...props}
+    />
+  )
 }
 
 export function CardContent({ className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={`p-6 ${className}`} {...props} />
+  return <div className={`pt-4 ${className}`} {...props} />
 }

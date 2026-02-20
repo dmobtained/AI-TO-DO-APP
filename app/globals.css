@@ -1,32 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --dd-navy: #253548;
-  --dd-navy-dark: #1c2d42;
-  --dd-navy-card: #2a3d5c;
-  --dd-orange: #f7931e;
-  --dd-teal: #2ec4b6;
-  --dd-white: #f4f6f8;
-  /* Executive theme (ingelogde app) */
-  --exec-bg: #f4f6f8;
-  --exec-text: #0f172a;
-  --exec-sidebar: #111827;
-  --exec-card: #ffffff;
-  --exec-border: #e5e7eb;
-  --exec-primary: #2563eb;
-  --exec-primary-hover: #1e40af;
+  --bg-main: #F4F6F8;
+  --card: #FFFFFF;
+  --border: #E6E9EE;
+  --primary: #3B82F6;
+  --primary-soft: #E8F1FF;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --success: #10B981;
+  --danger: #EF4444;
 }
 
 body {
-  background: var(--dd-navy);
-  color: var(--dd-white);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   @apply antialiased;
 }
 
 .text-secondary {
-  opacity: 0.7;
+  color: var(--text-secondary);
 }
 
 .animate-fade-in {
@@ -35,39 +33,4 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-@layer components {
-  .card-primary {
-    @apply rounded-2xl shadow-xl shadow-black/30 transition-all duration-200;
-    background: var(--dd-navy-card);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
-  .card-primary:hover {
-    @apply hover:scale-[1.02];
-    border-color: rgba(255, 255, 255, 0.15);
-  }
-
-  .card-dark {
-    @apply rounded-2xl shadow-xl shadow-black/30 transition-all duration-200;
-    background: var(--dd-navy-dark);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  .btn-primary {
-    background: var(--dd-orange);
-    @apply text-white rounded-xl font-medium shadow-lg transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#2ec4b6] focus:ring-offset-2 focus:ring-offset-[#1e2b44];
-    box-shadow: 0 10px 15px -3px rgba(247, 147, 30, 0.2);
-  }
-  .btn-primary:hover {
-    filter: brightness(1.08);
-  }
-
-  .btn-accent {
-    background: var(--dd-teal);
-    @apply text-white rounded-xl font-medium shadow-lg transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#2ec4b6] focus:ring-offset-2 focus:ring-offset-[#1e2b44];
-  }
-  .btn-accent:hover {
-    filter: brightness(1.08);
-  }
 }

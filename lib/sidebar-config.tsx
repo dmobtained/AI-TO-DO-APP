@@ -3,6 +3,7 @@
 import {
   LayoutDashboard,
   ListTodo,
+  Calendar,
   Mail,
   Settings,
   Wallet,
@@ -12,7 +13,6 @@ import {
   StickyNote,
   Users,
   Banknote,
-  User,
   Shield,
   type LucideIcon,
 } from 'lucide-react'
@@ -32,26 +32,26 @@ export type SidebarItem = {
 export const SIDEBAR_ITEMS: SidebarItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/dashboard/taken', label: 'Taken', icon: ListTodo },
-  { path: '/dashboard/email', label: 'E-mail', icon: Mail },
-  { path: '/dashboard/instellingen', label: 'Instellingen', icon: Settings },
+  { path: '/dashboard/agenda', label: 'Agenda', icon: Calendar },
   {
     path: '/dashboard/financien',
     label: 'Financiën',
     icon: Wallet,
     children: [
       { path: '/dashboard/financien/bank', label: 'Bank' },
-      { path: '/dashboard/financien/lasten', label: 'Vaste lasten' },
-      { path: '/dashboard/financien/belasting', label: 'Belasting' },
-      { path: '/dashboard/financien/beleggen', label: 'Beleggen' },
+      { path: '/dashboard/financien', label: 'Snelle uitgaven' },
+      { path: '/dashboard/financien/schulden', label: 'Schulden' },
+      { path: '/dashboard/financien/beleggen', label: 'Beleggingen' },
     ],
   },
-  { path: '/goud', label: 'Goud', icon: Award },
   { path: '/auto', label: 'Auto', icon: Car },
-  { path: '/business', label: 'Business', icon: Briefcase },
+  { path: '/dashboard/email', label: 'Mail', icon: Mail },
+  { path: '/goud', label: 'Goud', icon: Award },
+  { path: '/dashboard/instellingen', label: 'Instellingen', icon: Settings },
   { path: '/notities', label: 'Notities', icon: StickyNote },
+  { path: '/business', label: 'Business', icon: Briefcase },
   { path: '/vergaderingen', label: 'Vergaderingen', icon: Users },
   { path: '/valuta', label: 'Valuta', icon: Banknote },
-  { path: '/persoonlijke-info', label: 'Persoonlijke info', icon: User },
   { path: '/admin', label: 'Admin', icon: Shield, adminOnly: true },
 ]
 

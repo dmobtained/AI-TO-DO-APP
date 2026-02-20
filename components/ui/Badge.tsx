@@ -3,10 +3,10 @@
 type BadgeVariant = 'success' | 'danger' | 'warning' | 'neutral'
 
 const variantClass: Record<BadgeVariant, string> = {
-  success: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-  danger: 'bg-red-50 text-red-600 border-red-200',
-  warning: 'bg-amber-50 text-amber-600 border-amber-200',
-  neutral: 'bg-slate-100 text-slate-600 border-slate-200',
+  success: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  danger: 'bg-red-500/20 text-red-400 border-red-500/30',
+  warning: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  neutral: 'bg-hover text-textSecondary border-border',
 }
 
 export function Badge({
@@ -16,7 +16,7 @@ export function Badge({
 }: React.HTMLAttributes<HTMLSpanElement> & { variant?: BadgeVariant }) {
   return (
     <span
-      className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-medium ${variantClass[variant]} ${className}`}
+      className={`inline-flex items-center rounded-xl border px-2 py-0.5 text-xs font-medium ${variantClass[variant]} ${className}`}
       {...props}
     />
   )

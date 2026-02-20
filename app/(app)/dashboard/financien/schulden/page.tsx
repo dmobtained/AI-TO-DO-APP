@@ -12,52 +12,49 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { TrendingUp, Plus, Trash2 } from 'lucide-react'
+import { CreditCard, Plus, Trash2 } from 'lucide-react'
 
-type Investment = {
+type Debt = {
   id: string
   user_id: string
   name: string
-  type: string | null
-  invested_amount: number
-  current_value: number | null
-  last_updated: string | null
+  total_amount: number
+  interest_rate: number | null
+  monthly_payment: number
+  start_date: string | null
   created_at: string
 }
 
-export default function FinancienBeleggenPage() {
+export default function FinancienSchuldenPage() {
   const router = useRouter()
   const toast = useToast()
   const { user, loading: authLoading } = useDashboardUser()
-  const [investments, setInvestments] = useState<Investment[]>([])
+  const [debts, setDebts] = useState<Debt[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState({
     name: '',
-    type: '',
-    invested_amount: '',
-    current_value: '',
+    total_amount: '',
+    interest_rate: '',
+    monthly_payment: '',
+    start_date: '',
   })
 
-  const fetchInvestments = useCallback(async () => {
+  const fetchDebts = useCallback(async () => {
     if (!user?.id) return
     const supabase = getSupabaseClient()
     const { data, error } = await supabase
-      .from('investments')
-      .select('id, user_id, name, type, invested_amount, current_value, last_updated, created_at')
+      .from('debts')
+      .select('id, user_id, name, total_amount, interest_rate, monthly_payment, start_date, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     if (error) {
       toast(error.message, 'error')
-      setInvestments([])
+      setDebts([])
       return
     }
-    setInvestments((data ?? []).map((i) => ({
-      ...i,
-      invested_amount: Number(i.invested_amount),
-      current_value: i.current_value != null ? Number(i.current_value) : null,
-    })) as Investment[])
+    setDebts((data ?? []).map((d) => ({ ...d, total_amount: Number(d.total_amount), interest_rate: d.interest_rate != null ? Number(d.interest_rate) : null, monthly_payment: Number(d.monthly_payment) })) as Debt[])
   }, [user?.id, toast])
 
   useEffect(() => {
@@ -67,48 +64,51 @@ export default function FinancienBeleggenPage() {
       return
     }
     setLoading(true)
-    fetchInvestments().finally(() => setLoading(false))
-  }, [user, authLoading, router, fetchInvestments])
+    fetchDebts().finally(() => setLoading(false))
+  }, [user, authLoading, router, fetchDebts])
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user?.id) return
     const name = form.name.trim()
-    const invested_amount = parseFloat(form.invested_amount.replace(',', '.'))
-    if (!name || Number.isNaN(invested_amount) || invested_amount < 0) {
-      toast('Vul naam en belegd bedrag in', 'error')
+    const total_amount = parseFloat(form.total_amount.replace(',', '.'))
+    const monthly_payment = parseFloat(form.monthly_payment.replace(',', '.'))
+    if (!name || Number.isNaN(total_amount) || total_amount < 0 || Number.isNaN(monthly_payment) || monthly_payment < 0) {
+      toast('Vul naam, totaalbedrag en maandbedrag in', 'error')
       return
     }
     setAdding(true)
     const supabase = getSupabaseClient()
-    const current_value = form.current_value.trim() ? parseFloat(form.current_value.replace(',', '.')) : null
-    const { error } = await supabase.from('investments').insert({
+    const interest_rate = form.interest_rate.trim() ? parseFloat(form.interest_rate.replace(',', '.')) : null
+    const start_date = form.start_date.trim() || null
+    const { error } = await supabase.from('debts').insert({
       user_id: user.id,
       name,
-      type: form.type.trim() || null,
-      invested_amount,
-      current_value: current_value != null && !Number.isNaN(current_value) ? current_value : null,
+      total_amount,
+      interest_rate: interest_rate != null && !Number.isNaN(interest_rate) ? interest_rate : null,
+      monthly_payment,
+      start_date: start_date || null,
     })
     setAdding(false)
     if (error) {
       toast(error.message, 'error')
       return
     }
-    toast('Belegging toegevoegd')
-    setForm({ name: '', type: '', invested_amount: '', current_value: '' })
+    toast('Schuld toegevoegd')
+    setForm({ name: '', total_amount: '', interest_rate: '', monthly_payment: '', start_date: '' })
     setShowForm(false)
-    fetchInvestments()
+    fetchDebts()
   }
 
   const handleDelete = async (id: string) => {
     const supabase = getSupabaseClient()
-    const { error } = await supabase.from('investments').delete().eq('id', id).eq('user_id', user!.id)
+    const { error } = await supabase.from('debts').delete().eq('id', id).eq('user_id', user!.id)
     if (error) {
       toast(error.message, 'error')
       return
     }
     toast('Verwijderd')
-    fetchInvestments()
+    fetchDebts()
   }
 
   if (authLoading || !user) {
@@ -123,11 +123,11 @@ export default function FinancienBeleggenPage() {
     <FeatureGuard feature="finance_module">
       <PageContainer>
         <SectionHeader
-          title="Beleggingen"
-          subtitle="Overzicht beleggingen; maandelijkse update-taak wordt automatisch aangemaakt"
+          title="Schulden"
+          subtitle="Overzicht en maandbedragen"
           action={
             <Button onClick={() => setShowForm((s) => !s)}>
-              <Plus className="h-4 w-4 mr-2" /> {showForm ? 'Annuleren' : 'Belegging toevoegen'}
+              <Plus className="h-4 w-4 mr-2" /> {showForm ? 'Annuleren' : 'Schuld toevoegen'}
             </Button>
           }
         />
@@ -136,30 +136,40 @@ export default function FinancienBeleggenPage() {
           <Card className="mt-6 p-6">
             <form onSubmit={handleAdd} className="space-y-4">
               <Input
-                placeholder="Naam (bijv. fonds of broker)"
+                placeholder="Naam (bijv. bank of lening)"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 required
-              />
-              <Input
-                placeholder="Type (optioneel: stock, fund, crypto, …)"
-                value={form.type}
-                onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   type="text"
                   inputMode="decimal"
-                  placeholder="Belegd bedrag (€)"
-                  value={form.invested_amount}
-                  onChange={(e) => setForm((f) => ({ ...f, invested_amount: e.target.value }))}
+                  placeholder="Totaalbedrag (€)"
+                  value={form.total_amount}
+                  onChange={(e) => setForm((f) => ({ ...f, total_amount: e.target.value }))}
                 />
                 <Input
                   type="text"
                   inputMode="decimal"
-                  placeholder="Huidige waarde (€, optioneel)"
-                  value={form.current_value}
-                  onChange={(e) => setForm((f) => ({ ...f, current_value: e.target.value }))}
+                  placeholder="Maandbedrag (€)"
+                  value={form.monthly_payment}
+                  onChange={(e) => setForm((f) => ({ ...f, monthly_payment: e.target.value }))}
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="Rente % (optioneel)"
+                  value={form.interest_rate}
+                  onChange={(e) => setForm((f) => ({ ...f, interest_rate: e.target.value }))}
+                />
+                <Input
+                  type="date"
+                  placeholder="Startdatum (optioneel)"
+                  value={form.start_date}
+                  onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
                 />
               </div>
               <Button type="submit" disabled={adding}>Toevoegen</Button>
@@ -169,30 +179,29 @@ export default function FinancienBeleggenPage() {
 
         {loading ? (
           <div className="mt-6 h-32 rounded-xl bg-slate-100 animate-pulse" />
-        ) : investments.length === 0 ? (
+        ) : debts.length === 0 ? (
           <EmptyState
-            icon={TrendingUp}
-            title="Geen beleggingen"
-            description="Voeg een belegging toe. Er wordt automatisch een maandelijkse herinneringstaak aangemaakt."
+            icon={CreditCard}
+            title="Geen schulden"
+            description="Voeg een schuld toe om maandelijkse betalingen te volgen. Er wordt automatisch een taak aangemaakt."
             className="mt-8"
           />
         ) : (
           <ul className="mt-6 space-y-3">
-            {investments.map((i) => (
-              <li key={i.id}>
+            {debts.map((d) => (
+              <li key={d.id}>
                 <Card>
                   <CardContent className="p-4 flex items-center justify-between gap-4">
                     <div>
-                      <p className="font-medium text-slate-900">{i.name}</p>
+                      <p className="font-medium text-slate-900">{d.name}</p>
                       <p className="text-sm text-slate-500">
-                        Belegd € {i.invested_amount.toFixed(2)}
-                        {i.current_value != null && ` · Huidige waarde € ${i.current_value.toFixed(2)}`}
-                        {i.type && ` · ${i.type}`}
+                        Totaal € {d.total_amount.toFixed(2)} · € {d.monthly_payment.toFixed(2)}/maand
+                        {d.interest_rate != null && ` · ${d.interest_rate}% rente`}
                       </p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleDelete(i.id)}
+                      onClick={() => handleDelete(d.id)}
                       className="p-2 text-slate-400 hover:text-red-600 rounded-lg"
                       aria-label="Verwijderen"
                     >

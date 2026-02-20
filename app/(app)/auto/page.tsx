@@ -22,7 +22,16 @@ type AutoEntry = {
   entry_date: string
   notes: string | null
   odometer_km: number | null
+  liters: number | null
   created_at: string
+}
+
+type FuelStats = {
+  total_km: number | null
+  total_liters: number | null
+  avg_consumption_km_per_liter: number | null
+  cost_per_km: number | null
+  fuel_entries_count: number
 }
 
 const TABS = [
@@ -46,8 +55,10 @@ export default function AutoPage() {
     entry_date: new Date().toISOString().slice(0, 10),
     notes: '',
     odometer_km: '',
+    liters: '',
   })
   const [adding, setAdding] = useState(false)
+  const [fuelStats, setFuelStats] = useState<FuelStats | null>(null)
 
   const loadKenteken = useCallback(async () => {
     if (!user?.id) return
@@ -81,13 +92,28 @@ export default function AutoPage() {
     setLoading(true)
     const res = await fetch('/api/auto', { credentials: 'include' })
     const data = await res.json().catch(() => ({}))
-    setEntries((data.entries ?? []).map((e: { amount: string } & AutoEntry) => ({ ...e, amount: Number(e.amount) ?? 0 })))
+    setEntries((data.entries ?? []).map((e: { amount: string; liters?: number | null } & AutoEntry) => ({
+      ...e,
+      amount: Number(e.amount) ?? 0,
+      liters: e.liters != null ? Number(e.liters) : null,
+    })))
     setLoading(false)
+  }, [])
+
+  const fetchFuelStats = useCallback(async () => {
+    const res = await fetch('/api/auto/fuel-stats', { credentials: 'include' })
+    const data = await res.json().catch(() => ({}))
+    if (res.ok && data) setFuelStats(data as FuelStats)
+    else setFuelStats(null)
   }, [])
 
   useEffect(() => {
     fetchEntries()
   }, [fetchEntries])
+
+  useEffect(() => {
+    fetchFuelStats()
+  }, [fetchFuelStats])
 
   const thisYear = new Date().getFullYear()
   const yearStart = `${thisYear}-01-01`
@@ -105,18 +131,23 @@ export default function AutoPage() {
       return
     }
     setAdding(true)
+    const payload: Record<string, unknown> = {
+      type,
+      title: form.title.trim() || (type === 'fuel' ? 'Tankbeurt' : type === 'maintenance' ? 'Onderhoud' : type === 'repair' ? 'Reparatie' : 'Aanschaf'),
+      amount,
+      entry_date: form.entry_date,
+      notes: form.notes.trim() || null,
+      odometer_km: form.odometer_km ? parseInt(form.odometer_km, 10) : null,
+    }
+    if (type === 'fuel' && form.liters.trim()) {
+      const liters = parseFloat(form.liters.replace(',', '.'))
+      if (!Number.isNaN(liters) && liters >= 0) payload.liters = liters
+    }
     const res = await fetch('/api/auto', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({
-        type,
-        title: form.title.trim() || (type === 'fuel' ? 'Tankbeurt' : type === 'maintenance' ? 'Onderhoud' : type === 'repair' ? 'Reparatie' : 'Aanschaf'),
-        amount,
-        entry_date: form.entry_date,
-        notes: form.notes.trim() || null,
-        odometer_km: form.odometer_km ? parseInt(form.odometer_km, 10) : null,
-      }),
+      body: JSON.stringify(payload),
     })
     setAdding(false)
     const data = await res.json().catch(() => ({}))
@@ -125,8 +156,9 @@ export default function AutoPage() {
       return
     }
     toast('Toegevoegd')
-    setForm({ title: '', amount: '', entry_date: new Date().toISOString().slice(0, 10), notes: '', odometer_km: '' })
+    setForm({ title: '', amount: '', entry_date: new Date().toISOString().slice(0, 10), notes: '', odometer_km: '', liters: '' })
     fetchEntries()
+    if (type === 'fuel') fetchFuelStats()
   }
 
   const handleDelete = async (id: string) => {
@@ -137,7 +169,12 @@ export default function AutoPage() {
     }
     toast('Verwijderd')
     fetchEntries()
+    fetchFuelStats()
   }
+
+  const costPerKm = fuelStats?.cost_per_km != null ? `€ ${Number(fuelStats.cost_per_km).toFixed(4)}` : '€ —'
+  const avgConsumption = fuelStats?.avg_consumption_km_per_liter != null ? `${Number(fuelStats.avg_consumption_km_per_liter).toFixed(2)} km/L` : '—'
+  const totalKm = fuelStats?.total_km != null ? `${fuelStats.total_km} km` : '—'
 
   return (
     <PageContainer>
@@ -161,7 +198,9 @@ export default function AutoPage() {
 
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Totale kosten dit jaar" value={loading ? '€ —' : `€ ${totalCostYear.toFixed(2)}`} />
-        <StatCard title="Kosten per km" value="€ —" />
+        <StatCard title="Kosten per km (brandstof)" value={costPerKm} />
+        <StatCard title="Gem. verbruik (km/L)" value={avgConsumption} />
+        <StatCard title="Totaal km (brandstof)" value={totalKm} />
         <StatCard title="Aanschafwaarde" value={loading ? '€ —' : `€ ${aanschafwaarde.toFixed(2)}`} />
         <StatCard title="Huidige waarde" value="€ —" />
       </div>
@@ -202,12 +241,22 @@ export default function AutoPage() {
                       className="w-36"
                     />
                     {value === 'fuel' && (
-                      <Input
-                        placeholder="Km-stand"
-                        value={form.odometer_km}
-                        onChange={(e) => setForm((f) => ({ ...f, odometer_km: e.target.value }))}
-                        className="w-24"
-                      />
+                      <>
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="Liters"
+                          value={form.liters}
+                          onChange={(e) => setForm((f) => ({ ...f, liters: e.target.value }))}
+                          className="w-20"
+                        />
+                        <Input
+                          placeholder="Km-stand"
+                          value={form.odometer_km}
+                          onChange={(e) => setForm((f) => ({ ...f, odometer_km: e.target.value }))}
+                          className="w-24"
+                        />
+                      </>
                     )}
                     <Input
                       placeholder="Notitie (optioneel)"
@@ -234,6 +283,7 @@ export default function AutoPage() {
                             <p className="text-sm text-slate-500">
                               {e.entry_date}
                               {e.odometer_km != null && ` · ${e.odometer_km} km`}
+                              {e.liters != null && ` · ${e.liters} L`}
                               {e.notes && ` · ${e.notes}`}
                             </p>
                           </div>

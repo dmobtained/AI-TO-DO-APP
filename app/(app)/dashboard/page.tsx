@@ -11,7 +11,7 @@ import { logActivity } from '@/lib/audit'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { ListTodo, Mail, Wallet, Settings, Cloud, Briefcase, Target, ChevronDown, ChevronUp } from 'lucide-react'
+import { ListTodo, Mail, Wallet, Settings, Cloud, Briefcase, Target, ChevronDown, ChevronUp, Calendar, Car } from 'lucide-react'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { StatCard } from '@/components/ui/StatCard'
 
@@ -306,51 +306,58 @@ export default function DashboardPage() {
   const welcomeText = profileName ? `Welkom terug ${profileName}` : 'Welkom terug'
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
-  const quickLinks = [
-    { href: '/dashboard/taken', label: 'Taken', icon: ListTodo },
-    { href: '/dashboard/email', label: 'E-mail', icon: Mail },
-    { href: '/dashboard/financien', label: 'Financiën', icon: Wallet },
-    { href: '/dashboard/instellingen', label: 'Instellingen', icon: Settings },
+  const alertBoxes: { href: string; label: string; icon: React.ElementType; count: string | number }[] = [
+    { href: '/dashboard/taken', label: 'Openstaande taken', icon: ListTodo, count: loading ? '…' : openTasks.length },
+    { href: '/dashboard/agenda', label: 'Vandaag', icon: Calendar, count: loading ? '…' : openTasksToday },
+    { href: '/dashboard/financien', label: 'Financiën', icon: Wallet, count: '' },
+    { href: '/dashboard/email', label: 'Mail', icon: Mail, count: '' },
+    { href: '/auto', label: 'Auto', icon: Car, count: '' },
+    { href: '/dashboard/instellingen', label: 'Instellingen', icon: Settings, count: '' },
   ]
 
   return (
-    <div className="mx-auto max-w-6xl animate-fade-in">
-      <SectionHeader title={`Dashboard · ${welcomeText}`} subtitle="Overzicht van vandaag en deze maand" />
+    <div className="mx-auto max-w-6xl animate-fade-in space-y-6">
+      <SectionHeader title="Dashboard" subtitle={welcomeText} />
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        {quickLinks.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:shadow-md hover:border-[#2563eb]/30 transition-all duration-200"
-          >
-            <Icon className="h-4 w-4 shrink-0 text-[#2563eb]" />
-            {label}
-          </Link>
-        ))}
-      </div>
+      <Card className="p-5" hoverLift={false}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          {alertBoxes.map(({ href, label, icon: Icon, count }) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex flex-col items-center gap-2 rounded-[14px] border border-border bg-card p-4 text-center transition-all duration-[180ms] ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30"
+            >
+              <Icon className="h-8 w-8 shrink-0 text-primary" />
+              <span className="text-sm font-medium text-textPrimary leading-tight">{label}</span>
+              {count !== '' && (
+                <span className="text-lg font-bold text-textPrimary tabular-nums">{count}</span>
+              )}
+            </Link>
+          ))}
+        </div>
+      </Card>
 
-      <div className="mt-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <Card className="xl:col-span-2 p-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Financiële kern</h2>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <Card className="xl:col-span-2">
+          <h2 className="text-lg font-semibold text-textPrimary mb-4">Financiële kern</h2>
           <div className="space-y-2 text-sm">
-            <p className="text-slate-600">Salaris deze maand: <span className="font-medium text-slate-900">{loading ? '—' : `€ ${salarisMaand.toFixed(2)}`}</span></p>
-            <p className="text-slate-600">Netto vrij bedrag: <span className="font-medium text-slate-900">{loading ? '—' : `€ ${nettoVrij.toFixed(2)}`}</span></p>
-            <p className="text-slate-600">% over: <span className="font-medium text-slate-900">{loading ? '—' : `${pctOver}%`}</span></p>
-            <p className="text-slate-500 mt-2">7-dagen budget status</p>
-            <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
-              <div className="h-full rounded-full bg-[#2563eb] transition-all duration-300" style={{ width: `${Math.min(100, budget7Progress)}%` }} />
+            <p className="text-textSecondary">Salaris deze maand: <span className="font-medium text-textPrimary">{loading ? '—' : `€ ${salarisMaand.toFixed(2)}`}</span></p>
+            <p className="text-textSecondary">Netto vrij bedrag: <span className="font-medium text-textPrimary">{loading ? '—' : `€ ${nettoVrij.toFixed(2)}`}</span></p>
+            <p className="text-textSecondary">% over: <span className="font-medium text-textPrimary">{loading ? '—' : `${pctOver}%`}</span></p>
+            <p className="text-textSecondary mt-2">7-dagen budget status</p>
+            <div className="h-2.5 rounded-full bg-border overflow-hidden">
+              <div className="h-full rounded-full bg-primary transition-all duration-[600ms] ease-out" style={{ width: `${Math.min(100, budget7Progress)}%` }} />
             </div>
           </div>
         </Card>
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <Cloud className="h-5 w-5 text-slate-500" /> Weer
+        <Card>
+          <h2 className="text-lg font-semibold text-textPrimary mb-4 flex items-center gap-2">
+            <Cloud className="h-5 w-5 text-textSecondary" /> Weer
           </h2>
           {weather == null ? (
-            <p className="text-sm text-slate-500">Laden…</p>
+            <p className="text-sm text-textSecondary">Laden…</p>
           ) : (
-            <div className="space-y-1 text-sm text-slate-600">
+            <div className="space-y-1 text-sm text-textSecondary">
               <p>Huidige temp: {weather.temp != null ? `${weather.temp} °C` : '—'}</p>
               <p>Max: {weather.max != null ? `${weather.max} °C` : '—'} · Min: {weather.min != null ? `${weather.min} °C` : '—'}</p>
               <p>Regenkans: {weather.rain != null ? `${weather.rain}%` : '—'}</p>
@@ -359,10 +366,10 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <Card className="p-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <Card>
           <CardHeader className="border-0 p-0">
-            <CardTitle className="text-base text-slate-900">Snelle uitgave</CardTitle>
+            <CardTitle className="text-base text-textPrimary">Snelle uitgave</CardTitle>
           </CardHeader>
           <CardContent className="p-0 pt-4">
             <div className="flex gap-2">
@@ -377,8 +384,8 @@ export default function DashboardPage() {
               <Button onClick={handleQuickExpenseAdd}>Toevoegen</Button>
             </div>
             {quickListToday.length > 0 && (
-              <ul className="mt-3 space-y-1 text-sm text-slate-600">
-                <span className="text-xs text-slate-500">Vandaag:</span>
+              <ul className="mt-3 space-y-1 text-sm text-textSecondary">
+                <span className="text-xs text-textSecondary">Vandaag:</span>
                 {quickListToday.map((item) => (
                   <li key={item.id}>€ {item.amount.toFixed(2)}</li>
                 ))}
@@ -386,57 +393,57 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Weekbudget voortgang</h2>
-          <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden mt-2">
-            <div className="h-full rounded-full bg-[#2563eb] transition-all duration-300 w-2/3" />
+        <Card>
+          <h2 className="text-lg font-semibold text-textPrimary mb-2">Weekbudget voortgang</h2>
+          <div className="h-2.5 rounded-full bg-border overflow-hidden mt-2">
+            <div className="h-full rounded-full bg-primary transition-all duration-[600ms] ease-out w-2/3" />
           </div>
-          <p className="mt-2 text-sm text-slate-500">Voor op schema</p>
+          <p className="mt-2 text-sm text-textSecondary">Voor op schema</p>
         </Card>
-        <StatCard title="Open taken vandaag" value={loading ? '—' : openTasksToday} className="p-6" />
+        <StatCard title="Open taken vandaag" value={loading ? '—' : openTasksToday} />
       </div>
 
-      <div className="mt-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <Briefcase className="h-5 w-5 text-slate-500" /> Business pipeline
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <Card>
+          <h2 className="text-lg font-semibold text-textPrimary mb-4 flex items-center gap-2">
+            <Briefcase className="h-5 w-5 text-textSecondary" /> Business pipeline
           </h2>
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-xl bg-slate-50 border border-[#e5e7eb] p-3">
-              <p className="text-2xl font-bold text-slate-900">0</p>
-              <p className="text-xs text-slate-500">Leads</p>
+            <div className="rounded-[14px] bg-hover border border-border p-3">
+              <p className="text-2xl font-bold text-textPrimary">0</p>
+              <p className="text-xs text-textSecondary">Leads</p>
             </div>
-            <div className="rounded-xl bg-slate-50 border border-[#e5e7eb] p-3">
-              <p className="text-2xl font-bold text-slate-900">0</p>
-              <p className="text-xs text-slate-500">Gesprek</p>
+            <div className="rounded-[14px] bg-hover border border-border p-3">
+              <p className="text-2xl font-bold text-textPrimary">0</p>
+              <p className="text-xs text-textSecondary">Gesprek</p>
             </div>
-            <div className="rounded-xl bg-slate-50 border border-[#e5e7eb] p-3">
-              <p className="text-2xl font-bold text-slate-900">0</p>
-              <p className="text-xs text-slate-500">Deal</p>
+            <div className="rounded-[14px] bg-hover border border-border p-3">
+              <p className="text-2xl font-bold text-textPrimary">0</p>
+              <p className="text-xs text-textSecondary">Deal</p>
             </div>
           </div>
         </Card>
-        <Card className="p-6 col-span-1 xl:col-span-2">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <Target className="h-5 w-5 text-slate-500" /> Top 3 prioriteiten
+        <Card className="xl:col-span-2">
+          <h2 className="text-lg font-semibold text-textPrimary mb-4 flex items-center gap-2">
+            <Target className="h-5 w-5 text-textSecondary" /> Top 3 prioriteiten
           </h2>
           {loading ? (
-            <ul className="divide-y divide-[#e5e7eb]">
+            <ul className="divide-y divide-border">
               {[1, 2, 3].map((i) => (
-                <li key={i} className="py-3"><div className="h-5 w-2/3 rounded bg-slate-100 animate-pulse" /></li>
+                <li key={i} className="py-3"><div className="h-5 w-2/3 rounded bg-border animate-pulse" /></li>
               ))}
             </ul>
           ) : focusTasks.length === 0 ? (
-            <p className="text-slate-500 text-sm">Geen prioriteiten.</p>
+            <p className="text-textSecondary text-sm">Geen prioriteiten.</p>
           ) : (
-            <ul className="divide-y divide-[#e5e7eb]">
+            <ul className="divide-y divide-border">
               {focusTasks.map((task) => (
                 <li key={task.id} className="py-3 flex items-center gap-3 group">
-                  <button type="button" onClick={() => handleToggleTask(task)} className="shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center hover:border-[#2563eb] transition-all duration-200" aria-label="Afvinken">
-                    {task.status === 'DONE' && <span className="w-2 h-2 rounded-full bg-[#2563eb]" />}
+                  <button type="button" onClick={() => handleToggleTask(task)} className="shrink-0 w-5 h-5 rounded-full border-2 border-border bg-card flex items-center justify-center hover:border-primary transition-all duration-150" aria-label="Afvinken">
+                    {task.status === 'DONE' && <span className="w-2 h-2 rounded-full bg-primary" />}
                   </button>
-                  <Link href="/dashboard/taken" className="flex-1 min-w-0 truncate text-sm font-medium text-slate-900 hover:text-[#2563eb]">{task.title}</Link>
-                  <button type="button" onClick={() => handleDeleteTask(task.id, task.user_id)} className="shrink-0 text-xs text-slate-500 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">Verwijderen</button>
+                  <Link href="/dashboard/taken" className="flex-1 min-w-0 truncate text-sm font-medium text-textPrimary hover:text-primary">{task.title}</Link>
+                  <button type="button" onClick={() => handleDeleteTask(task.id, task.user_id)} className="shrink-0 text-xs text-textSecondary hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity">Verwijderen</button>
                 </li>
               ))}
             </ul>
@@ -444,80 +451,104 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="mt-8">
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Dagnotitie</h2>
-          <Button onClick={handleGenerateDaynote} disabled={daynoteStatus === 'loading'}>
-            {daynoteStatus === 'loading' && (
-              <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            )}
-            Genereer Dagnotitie
-          </Button>
-          {daynoteStatus === 'error' && daynoteError && (
-            <p className="mt-3 text-sm text-red-600">{daynoteError}</p>
+      <Card variant="hero">
+        <CardTitle variant="hero" className="mb-4">Dagnotitie</CardTitle>
+        <Button onClick={handleGenerateDaynote} disabled={daynoteStatus === 'loading'}>
+          {daynoteStatus === 'loading' && (
+            <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
           )}
-          {daynoteStatus === 'success' && daynote && (
-            <div className="mt-4 pt-4 border-t border-[#e5e7eb]">
-              <p className="text-xs text-slate-500 mb-2">
-                {new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </p>
-              <pre className="text-sm text-slate-700 whitespace-pre-line font-sans bg-slate-50 p-4 rounded-xl border border-[#e5e7eb]">
-                {daynote}
-              </pre>
-              <Button variant="secondary" className="mt-2" onClick={() => { void navigator.clipboard.writeText(daynote); toast('Gekopieerd naar klembord.') }}>
-                Kopiëren
-              </Button>
-            </div>
-          )}
-        </Card>
-      </div>
+          Genereer Dagnotitie
+        </Button>
+        {daynoteStatus === 'error' && daynoteError && (
+          <p className="mt-3 text-sm text-danger">{daynoteError}</p>
+        )}
+        {daynoteStatus === 'success' && daynote && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <p className="text-xs text-textSecondary mb-2">
+              {new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <pre className="text-sm text-textPrimary whitespace-pre-line font-sans bg-card p-4 rounded-[14px] border border-border">
+              {daynote}
+            </pre>
+            <Button variant="secondary" className="mt-2" onClick={() => { void navigator.clipboard.writeText(daynote); toast('Gekopieerd naar klembord.') }}>
+              Kopiëren
+            </Button>
+          </div>
+        )}
+      </Card>
 
       {canSee('dashboard_tasks_list') && (
-        <div className="mt-8">
-          <Card className="overflow-hidden">
-            <CardHeader className="border-b border-[#e5e7eb]"><CardTitle className="text-slate-900">Open taken</CardTitle></CardHeader>
-            {loading ? (
-              <ul className="divide-y divide-[#e5e7eb]">
-                {[1, 2, 3, 4].map((i) => (
-                  <li key={i} className="px-6 py-4">
-                    <div className="h-5 w-3/4 rounded bg-slate-100 animate-pulse" />
-                  </li>
-                ))}
-              </ul>
-            ) : openTasks.length === 0 ? (
-              <div className="px-6 py-8 text-center text-slate-500 text-sm">Geen open taken.</div>
-            ) : (
-              <ul className="divide-y divide-[#e5e7eb]">
-                {openTasks.map((task) => (
-                  <li key={task.id} className="px-6 py-3 flex items-center gap-3 group hover:bg-slate-50/50 transition-colors">
-                    <button type="button" onClick={() => handleToggleTask(task)} className="shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center hover:border-[#2563eb] transition-all duration-200" aria-label="Afvinken">
-                      {task.status === 'DONE' && <span className="w-2 h-2 rounded-full bg-[#2563eb]" />}
-                    </button>
-                    <Link href="/dashboard/taken" className="flex-1 min-w-0 truncate text-sm font-medium text-slate-900 hover:text-[#2563eb] transition-colors duration-200">{task.title}</Link>
-                    <button type="button" onClick={() => handleDeleteTask(task.id, task.user_id)} className="shrink-0 text-xs text-slate-500 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100">Verwijderen</button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-        </div>
+        <Card hoverLift={false} className="overflow-hidden p-0">
+          <div className="border-b border-border px-5 py-4">
+            <h2 className="text-lg font-semibold text-textPrimary">Deze taken moeten vandaag worden opgepakt</h2>
+          </div>
+          {loading ? (
+            <div className="grid grid-cols-[auto_1fr_2fr_auto] gap-4 px-5 py-3 border-b border-border">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="col-span-4 h-12 rounded bg-border animate-pulse" />
+              ))}
+            </div>
+          ) : openTasks.length === 0 ? (
+            <div className="px-6 py-8 text-center text-textSecondary text-sm">Geen open taken.</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-[auto_1fr_2fr_auto] gap-4 px-5 py-2 border-b border-border text-xs font-medium text-textSecondary uppercase tracking-wide">
+                <span className="w-10" />
+                <span>Datum</span>
+                <span>Beschrijving</span>
+                <span className="text-right">Acties</span>
+              </div>
+              <div className="divide-y divide-border">
+                {openTasks.map((task, idx) => {
+                  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status === 'OPEN'
+                  const dueStr = task.due_date
+                    ? new Date(task.due_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : '—'
+                  return (
+                    <div
+                      key={task.id}
+                      className={`grid grid-cols-[auto_1fr_2fr_auto] gap-4 px-5 py-3 items-center group transition-colors duration-150 hover:bg-hover ${idx % 2 === 1 ? 'bg-hover/50' : ''}`}
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-hover">
+                        <ListTodo className={`h-5 w-5 ${isOverdue ? 'text-amber-500' : 'text-primary'}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-sm text-textPrimary">{dueStr}</span>
+                      </div>
+                      <Link href="/dashboard/taken" className="min-w-0 block">
+                        <span className="text-sm font-medium text-textPrimary group-hover:text-primary transition-colors line-clamp-1">{task.title}</span>
+                        {task.details && <span className="text-xs text-textSecondary line-clamp-1 block mt-0.5">{task.details}</span>}
+                      </Link>
+                      <div className="flex items-center gap-2 justify-end">
+                        <button type="button" onClick={() => handleToggleTask(task)} className="shrink-0 w-7 h-7 rounded-full border-2 border-border bg-card flex items-center justify-center hover:border-primary transition-all duration-150" aria-label="Afvinken">
+                          {task.status === 'DONE' && <span className="w-2 h-2 rounded-full bg-primary" />}
+                        </button>
+                        <button type="button" onClick={() => handleDeleteTask(task.id, task.user_id)} className="shrink-0 text-xs text-textSecondary hover:text-danger transition-colors opacity-0 group-hover:opacity-100">Verwijderen</button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </Card>
       )}
 
       {(canSee('cashflow_forecast') || canSee('financial_warnings') || canSee('productivity_meter') || canSee('decision_log')) && (
-        <div className="mt-8">
+        <div>
           <button
             type="button"
             onClick={() => setAdvancedOpen((o) => !o)}
-            className="flex w-full items-center justify-between rounded-2xl border border-[#e5e7eb] bg-white p-4 text-left shadow-sm hover:shadow-md transition-all duration-200"
+            className="flex w-full items-center justify-between rounded-[14px] border border-border bg-card p-5 text-left transition-all duration-[180ms] hover:-translate-y-0.5 hover:shadow-md"
           >
-            <span className="text-xl font-semibold text-slate-900">Geavanceerde inzichten</span>
-            {advancedOpen ? <ChevronUp className="h-5 w-5 text-slate-500" /> : <ChevronDown className="h-5 w-5 text-slate-500" />}
+            <span className="text-lg font-semibold text-textPrimary">Geavanceerde inzichten</span>
+            {advancedOpen ? <ChevronUp className="h-5 w-5 text-textSecondary" /> : <ChevronDown className="h-5 w-5 text-textSecondary" />}
           </button>
           {advancedOpen && (
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {canSee('cashflow_forecast') && <DashboardCashflowWidget />}
               {canSee('financial_warnings') && <DashboardWarningsWidget />}
               {canSee('productivity_meter') && <DashboardProductivityWidget />}
@@ -588,12 +619,12 @@ function DashboardCashflowWidget() {
   }, [])
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold text-slate-900 mb-2">Cashflow voorspelling</h2>
-      {status === 'loading' && <p className="text-slate-500 text-sm">Laden…</p>}
-      {status === 'nodata' && <p className="text-slate-500 text-sm">Nog onvoldoende data</p>}
+    <Card>
+      <h2 className="text-lg font-semibold text-textPrimary mb-2">Cashflow voorspelling</h2>
+      {status === 'loading' && <p className="text-textSecondary text-sm">Laden…</p>}
+      {status === 'nodata' && <p className="text-textSecondary text-sm">Nog onvoldoende data</p>}
       {status === 'data' && (
-        <div className="space-y-1 text-sm text-[#2563eb]">
+        <div className="space-y-1 text-sm text-primary">
           <p>7 dagen: € {Number(forecast7).toFixed(2)}</p>
           <p>30 dagen: € {Number(forecast30).toFixed(2)}</p>
         </div>
@@ -655,10 +686,10 @@ function DashboardWarningsWidget() {
   }, [])
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold text-slate-900 mb-2">Financiële waarschuwingen</h2>
-      {loading && <p className="text-slate-500 text-sm">Laden…</p>}
-      {!loading && warnings.length === 0 && <p className="text-slate-500 text-sm">Geen waarschuwingen</p>}
+    <Card>
+      <h2 className="text-lg font-semibold text-textPrimary mb-2">Financiële waarschuwingen</h2>
+      {loading && <p className="text-textSecondary text-sm">Laden…</p>}
+      {!loading && warnings.length === 0 && <p className="text-textSecondary text-sm">Geen waarschuwingen</p>}
       {!loading && warnings.length > 0 && (
         <ul className="list-disc list-inside text-sm text-amber-600 space-y-1">
           {warnings.map((w, i) => (
@@ -706,11 +737,11 @@ function DashboardProductivityWidget() {
   }, [])
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold text-slate-900 mb-2">Productiviteitsmeter</h2>
-      {loading && <p className="text-slate-500 text-sm">Laden…</p>}
+    <Card>
+      <h2 className="text-lg font-semibold text-textPrimary mb-2">Productiviteitsmeter</h2>
+      {loading && <p className="text-textSecondary text-sm">Laden…</p>}
       {!loading && (
-        <p className="text-slate-700">
+        <p className="text-textPrimary">
           {ratio != null ? `${ratio}% afgerond (deze week)` : '—'} {trend && ` · ${trend}`}
         </p>
       )}
@@ -788,21 +819,21 @@ function DashboardDecisionLogWidget() {
   }
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold text-slate-900 mb-3">Beslissingslogboek</h2>
+    <Card>
+      <h2 className="text-lg font-semibold text-textPrimary mb-3">Beslissingslogboek</h2>
       <form onSubmit={handleAdd} className="space-y-2 mb-4">
         <Input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Beslissing" disabled={adding} />
         <Input type="text" value={why} onChange={(e) => setWhy(e.target.value)} placeholder="Waarom (optioneel)" disabled={adding} />
         <Button type="submit" disabled={adding || !title.trim()}>{adding ? 'Bezig…' : 'Toevoegen'}</Button>
       </form>
-      {loading && <p className="text-slate-500 text-sm">Laden…</p>}
-      {!loading && decisions.length === 0 && <p className="text-slate-500 text-sm">Geen beslissingen</p>}
+      {loading && <p className="text-textSecondary text-sm">Laden…</p>}
+      {!loading && decisions.length === 0 && <p className="text-textSecondary text-sm">Geen beslissingen</p>}
       {!loading && decisions.length > 0 && (
         <ul className="space-y-1 text-sm">
           {decisions.map((d) => (
             <li key={d.id} className="flex items-center justify-between gap-2">
-              <span className="truncate text-slate-700">{d.title.replace(/^\[DECISION\]\s*/, '')}</span>
-              <button type="button" onClick={() => handleDelete(d.id, d.user_id)} className="text-slate-500 hover:text-red-600 shrink-0 transition-colors">Verwijderen</button>
+              <span className="truncate text-textPrimary">{d.title.replace(/^\[DECISION\]\s*/, '')}</span>
+              <button type="button" onClick={() => handleDelete(d.id, d.user_id)} className="text-textSecondary hover:text-danger shrink-0 transition-colors">Verwijderen</button>
             </li>
           ))}
         </ul>
