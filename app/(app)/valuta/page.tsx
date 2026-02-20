@@ -63,7 +63,7 @@ export default function ValutaPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <SectionHeader title="Valuta" description="Omrekenen op basis van actuele koersen (Frankfurter/ECB)." />
+      <SectionHeader title="Valuta" subtitle="Omrekenen op basis van actuele koersen (Frankfurter/ECB)." />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
