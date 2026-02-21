@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 
-const LOGIN_TIMEOUT_MS = 20000; // 20 sec voor trage verbindingen
-const SESSION_CHECK_TIMEOUT_MS = 15000; // 15 sec – Railway cold start / Supabase kan traag zijn
+const LOGIN_TIMEOUT_MS = 20000; // 20 sec
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,25 +16,18 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const sessionCheckDone = useRef(false);
 
-
   // Eenmalige session-check bij mount: als er al een sessie is → ga naar dashboard
   useEffect(() => {
     if (sessionCheckDone.current) return;
     sessionCheckDone.current = true;
-
     const checkSession = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session) {
-          router.replace("/dashboard");
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) router.replace("/dashboard");
       } catch {
-        // Negeer; gebruiker moet inloggen
+        // Negeer
       }
     };
-
     checkSession();
   }, [supabase, router]);
 
@@ -46,7 +38,7 @@ export default function LoginPage() {
       const url = window.__SUPABASE_ENV__?.url ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
       if (!url || url === "https://placeholder.supabase.co") {
         setError(
-          "Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local en herstart de dev-server (npm run dev)."
+          "Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local of Railway Variables."
         );
         return;
       }
@@ -54,53 +46,36 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const loginPromise = supabase.auth.signInWithPassword({ email, password });
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("TIMEOUT")), LOGIN_TIMEOUT_MS)
-      );
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), LOGIN_TIMEOUT_MS);
 
-      const result = await Promise.race([loginPromise, timeoutPromise]);
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal,
+      });
 
-      if (result.error) {
-        setError(result.error.message);
+      clearTimeout(timeoutId);
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError((data.error as string) || "Inloggen mislukt. Controleer e-mail en wachtwoord.");
         setLoading(false);
         return;
       }
 
-      // Sessie check met korte timeout (voorkomt hangen)
-      const sessionPromise = supabase.auth.getSession();
-      const sessionTimeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("SESSION_TIMEOUT")), SESSION_CHECK_TIMEOUT_MS)
-      );
-      const {
-        data: { session },
-      } = await Promise.race([sessionPromise, sessionTimeout]);
-
-      if (!session) {
-        setError("Sessie kon niet worden opgehaald. Probeer het opnieuw.");
-        setLoading(false);
-        return;
-      }
-
-      // Korte pauze zodat cookies (SSR) worden weggeschreven
-      await new Promise((r) => setTimeout(r, 200));
-
-      // Full page navigation zodat server (middleware/layout) de cookies ziet
+      // Full page navigation zodat middleware/layout de cookies ziet
       window.location.href = "/dashboard";
-      // loading blijft true tot pagina unloadt
     } catch (e) {
       setLoading(false);
-      if (e instanceof Error && e.message === "TIMEOUT") {
-        setError(
-          "Inloggen duurde te lang (timeout). Controleer je internet en of je op de juiste omgeving test (lokaal: .env.local, Railway: Variables)."
-        );
+      if (e instanceof Error && e.name === "AbortError") {
+        setError("Inloggen duurde te lang. Controleer je verbinding en probeer opnieuw.");
         return;
       }
-      if (e instanceof Error && e.message === "SESSION_TIMEOUT") {
-        setError("Sessie ophalen duurde te lang. Vernieuw de pagina en probeer opnieuw.");
-        return;
-      }
-      setError(e instanceof Error ? e.message : "Er ging iets mis.");
+      const msg = e && typeof (e as { message?: string }).message === "string" ? (e as Error).message : "";
+      setError(msg || "Er ging iets mis. Probeer het opnieuw.");
     }
   }
 

@@ -1,5 +1,7 @@
 # DataDenkt Systeem — Deploy op Railway
 
+**→ Stap-voor-stap live instellen? Zie [docs/LIVE_CHECKLIST.md](docs/LIVE_CHECKLIST.md)** (Railway + Supabase in volgorde).
+
 ## Is het systeem klaar voor Railway?
 
 Ja. Het project is gebouwd voor deploy op Railway:

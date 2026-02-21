@@ -79,12 +79,7 @@ export default function DashboardPage() {
     const tomorrowStr = tomorrow.toISOString().slice(0, 10)
 
     const [tasksRes, financeRes] = await Promise.all([
-      supabase
-        .from('tasks')
-        .select('id, title, status, created_at, due_date, user_id')
-        .eq('user_id', userId)
-        .eq('status', 'OPEN')
-        .order('created_at', { ascending: false }),
+      fetch('/api/tasks', { credentials: 'include' }),
       supabase
         .from('finance_entries')
         .select('type, amount')
@@ -93,20 +88,22 @@ export default function DashboardPage() {
         .lte('entry_date', last),
     ])
 
-    if (tasksRes.error) {
-      toast(tasksRes.error.message || 'Taken laden mislukt', 'error')
-      setOverviewError(tasksRes.error.message || 'Taken laden mislukt')
+    let tasks: Task[] = []
+    if (!tasksRes.ok) {
+      if (tasksRes.status === 401) return
+      toast('Taken laden mislukt', 'error')
+      setOverviewError('Taken laden mislukt')
       setOpenTasks([])
       setFocusTasks([])
-      return
+    } else {
+      tasks = (await tasksRes.json()) as Task[]
+      tasks = tasks.filter((t) => t.status === 'OPEN')
     }
     if (financeRes.error) {
       toast(financeRes.error.message || 'Financiën laden mislukt', 'error')
       setIncomeMonth(0)
       setExpenseMonth(0)
     }
-
-    const tasks = (tasksRes.data ?? []) as Task[]
     const todayCount = tasks.filter(
       (t) => isSameDay(t.due_date, today) || (t.created_at >= todayStr && t.created_at < tomorrowStr)
     ).length
@@ -171,9 +168,15 @@ export default function DashboardPage() {
 
   const handleToggleTask = async (task: Task) => {
     const nextStatus = task.status === 'OPEN' ? 'DONE' : 'OPEN'
-    const { error } = await supabase.from('tasks').update({ status: nextStatus }).eq('id', task.id).eq('user_id', task.user_id)
-    if (error) {
-      toast(error.message, 'error')
+    const res = await fetch(`/api/tasks/${task.id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: nextStatus }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      toast((data?.error as string) ?? 'Status bijwerken mislukt.', 'error')
       return
     }
     toast(nextStatus === 'DONE' ? 'Taak afgerond' : 'Taak geopend')
@@ -182,9 +185,10 @@ export default function DashboardPage() {
   }
 
   const handleDeleteTask = async (id: string, userId: string) => {
-    const { error } = await supabase.from('tasks').delete().eq('id', id).eq('user_id', userId)
-    if (error) {
-      toast(error.message, 'error')
+    const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE', credentials: 'include' })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      toast((data?.error as string) ?? 'Verwijderen mislukt.', 'error')
       return
     }
     toast('Taak verwijderd')
@@ -812,16 +816,15 @@ function DashboardDecisionLogWidget() {
   const toast = useToast()
 
   const fetchDecisions = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data } = await supabase
-      .from('tasks')
-      .select('id, title, user_id')
-      .eq('user_id', user.id)
-      .like('title', '[DECISION]%')
-      .order('created_at', { ascending: false })
-      .limit(10)
-    setDecisions((data ?? []) as { id: string; title: string; user_id: string }[])
+    const res = await fetch('/api/tasks', { credentials: 'include' })
+    if (!res.ok) return
+    const tasks = (await res.json()) as { id: string; title: string; user_id: string; created_at: string }[]
+    const decisionTasks = tasks
+      .filter((t) => t.title?.startsWith('[DECISION]'))
+      .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))
+      .slice(0, 10)
+      .map((t) => ({ id: t.id, title: t.title, user_id: t.user_id }))
+    setDecisions(decisionTasks)
   }, [])
 
   useEffect(() => {
@@ -842,17 +845,21 @@ function DashboardDecisionLogWidget() {
     if (!user) return
     setAdding(true)
     const fullTitle = t.startsWith('[DECISION]') ? t : `[DECISION] ${t}`
-    const { error } = await supabase.from('tasks').insert({
-      user_id: user.id,
-      title: fullTitle,
-      status: 'OPEN',
-      details: why.trim() || null,
-      priority: 'MEDIUM',
-      tags: [],
-    }).select('id, title, user_id').single()
+    const res = await fetch('/api/tasks', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: fullTitle,
+        details: why.trim() || null,
+        priority: 'MEDIUM',
+        tags: [],
+      }),
+    })
     setAdding(false)
-    if (error) {
-      toast(error.message, 'error')
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      toast((data?.error as string) ?? 'Toevoegen mislukt', 'error')
       return
     }
     toast('Beslissing toegevoegd')
@@ -861,10 +868,11 @@ function DashboardDecisionLogWidget() {
     fetchDecisions()
   }
 
-  const handleDelete = async (id: string, userId: string) => {
-    const { error } = await supabase.from('tasks').delete().eq('id', id).eq('user_id', userId)
-    if (error) {
-      toast(error.message, 'error')
+  const handleDelete = async (id: string, _userId: string) => {
+    const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE', credentials: 'include' })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      toast((data?.error as string) ?? 'Verwijderen mislukt', 'error')
       return
     }
     toast('Beslissing verwijderd')
