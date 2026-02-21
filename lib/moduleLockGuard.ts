@@ -4,7 +4,7 @@
  * Uses RPC: public.is_module_locked(p_module_key) -> boolean (admin bypass in DB).
  */
 
-import type { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
