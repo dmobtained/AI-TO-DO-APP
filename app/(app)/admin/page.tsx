@@ -28,6 +28,7 @@ export default function AdminPage() {
   const toast = useToast()
   const { role, loading: authLoading } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
+  const [usersError, setUsersError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [activity, setActivity] = useState<ActivityRow[]>([])
@@ -50,12 +51,19 @@ export default function AdminPage() {
   }, [role, authLoading, router])
 
   const fetchUsers = useCallback(async () => {
+    setUsersError(null)
     try {
       const res = await fetch('/api/admin/users')
-      if (!res.ok) throw new Error('Failed to fetch users')
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        const msg = data?.error ?? (res.status === 503 ? 'Admin API niet beschikbaar. Zet SUPABASE_SERVICE_ROLE_KEY in .env.local (en herstart).' : 'Kon gebruikers niet laden.')
+        setUsersError(msg)
+        setUsers([])
+        return
+      }
       setUsers(data.users ?? [])
     } catch {
+      setUsersError('Kon gebruikers niet laden.')
       setUsers([])
     } finally {
       setLoading(false)
@@ -272,6 +280,9 @@ export default function AdminPage() {
           <Card className="p-6">
             <CardHeader className="p-0 pb-4">
               <CardTitle className="text-textPrimary">Gebruikersbeheer</CardTitle>
+              {usersError && (
+                <p className="text-sm text-danger mt-2">{usersError}</p>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               <UserTable users={users} loading={loading} updatingId={updatingId} onRoleChange={handleRoleChange} />

@@ -21,8 +21,8 @@ export async function GET() {
   const { error } = await requireAdmin()
   if (error) return error
   const supabase = await createClient()
-  const { data, err } = await supabase.from('module_locks').select('slug, locked').order('slug')
-  if (err) return NextResponse.json({ error: err.message }, { status: 500 })
+  const { data, error: fetchError } = await supabase.from('module_locks').select('slug, locked').order('slug')
+  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 })
   return NextResponse.json({ locks: data ?? [] })
 }
 
