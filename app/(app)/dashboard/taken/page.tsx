@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useDashboardUser } from '@/hooks/useDashboardUser'
+import { useModuleLock } from '@/hooks/useModuleLock'
 import { useToast } from '@/context/ToastContext'
 import { FeatureGuard } from '@/components/FeatureGuard'
+import { ModuleLockBanner } from '@/components/modules/ModuleLockBanner'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { StatCard } from '@/components/ui/StatCard'
 import { SectionHeader } from '@/components/ui/SectionHeader'
@@ -110,6 +112,7 @@ export default function TakenPage() {
   const [adding, setAdding] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const { user, loading: authLoading } = useDashboardUser()
+  const { locked: moduleLocked } = useModuleLock('tasks')
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -127,7 +130,14 @@ export default function TakenPage() {
         setTasks([])
         return
       }
-      setTasks((data ?? []) as Task[])
+      const fromServer = (data ?? []) as Task[]
+      setTasks((prev) => {
+        const serverIds = new Set(fromServer.map((t) => t.id))
+        const keepFromPrev = prev.filter((t) => t.id.startsWith('pending-') || !serverIds.has(t.id))
+        const combined = [...keepFromPrev, ...fromServer]
+        combined.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))
+        return combined
+      })
     } catch {
       setTasks([])
     } finally {
@@ -147,45 +157,63 @@ export default function TakenPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     const title = form.title.trim()
-    if (!title) return
+    if (!title || !user) return
+    const payload = {
+      title,
+        status: 'OPEN' as TaskStatus,
+      user_id: user.id,
+      details: form.details.trim() || null,
+      priority: form.priority,
+      due_date: form.due_date ? new Date(form.due_date).toISOString() : null,
+      tags: [],
+      context: form.context || null,
+      estimated_time: form.estimated_time ? parseInt(form.estimated_time, 10) : null,
+      energy_level: form.energy_level,
+    }
+    const pendingId = `pending-${Date.now()}`
+    const optimisticTask: Task = {
+      id: pendingId,
+      title: payload.title,
+      status: 'OPEN',
+      created_at: new Date().toISOString(),
+      user_id: user.id,
+      details: payload.details,
+      priority: payload.priority,
+      due_date: payload.due_date,
+      tags: [],
+      context: payload.context,
+      estimated_time: payload.estimated_time,
+      energy_level: payload.energy_level,
+    }
+    setTasks((prev) => [optimisticTask, ...prev])
+    setForm(emptyForm)
+    setShowForm(false)
     setAdding(true)
     try {
-      const { data: { user: u } } = await supabase.auth.getUser()
-      if (!u) {
-        router.replace('/')
+      const INSERT_TIMEOUT_MS = 15000
+      const insertPromise = supabase.from('tasks').insert(payload).select().single()
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout')), INSERT_TIMEOUT_MS)
+      )
+      const result = await Promise.race([insertPromise, timeoutPromise]) as { data: Task | null; error: { message: string } | null }
+      const { data, error } = result
+      if (error || !data) {
+        setTasks((prev) => prev.filter((t) => t.id !== pendingId))
+        toast(error?.message ?? 'Kon taak niet toevoegen.', 'error')
         return
       }
-      const payload = {
-        title,
-        status: 'OPEN' as TaskStatus,
-        user_id: u.id,
-        details: form.details.trim() || null,
-        priority: form.priority,
-        due_date: form.due_date ? new Date(form.due_date).toISOString() : null,
-        tags: [],
-        context: form.context || null,
-        estimated_time: form.estimated_time ? parseInt(form.estimated_time, 10) : null,
-        energy_level: form.energy_level,
-      }
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert(payload)
-        .select()
-        .single()
-      if (error) {
-        toast(error.message, 'error')
-        return
-      }
-      setTasks((prev) => [data as Task, ...prev])
-      setForm(emptyForm)
-      setShowForm(false)
+      setTasks((prev) => prev.map((t) => (t.id === pendingId ? data : t)))
       toast('Taak toegevoegd')
+    } catch (err) {
+      setTasks((prev) => prev.filter((t) => t.id !== pendingId))
+      toast(err instanceof Error && err.message === 'Timeout' ? 'Toevoegen duurde te lang. Probeer opnieuw.' : 'Kon taak niet toevoegen.', 'error')
     } finally {
       setAdding(false)
     }
   }
 
   const handleToggle = async (task: Task) => {
+    if (task.id.startsWith('pending-')) return
     const nextStatus: TaskStatus = task.status === 'OPEN' ? 'DONE' : 'OPEN'
     const { error } = await supabase.from('tasks').update({ status: nextStatus }).eq('id', task.id).eq('user_id', task.user_id)
     if (error) {
@@ -197,6 +225,11 @@ export default function TakenPage() {
   }
 
   const handleDelete = async (id: string) => {
+    if (id.startsWith('pending-')) {
+      setTasks((prev) => prev.filter((t) => t.id !== id))
+      toast('Taak verwijderd')
+      return
+    }
     const { error } = await supabase.from('tasks').delete().eq('id', id).eq('user_id', user!.id)
     if (error) {
       toast(error.message, 'error')
@@ -230,11 +263,14 @@ export default function TakenPage() {
         title="Taken"
         subtitle="Beheer je taken en deadlines"
         action={
-          <Button variant={showForm ? 'secondary' : 'primary'} onClick={() => setShowForm((v) => !v)}>
-            {showForm ? 'Sluiten' : 'Nieuwe taak'}
-          </Button>
+          !moduleLocked && (
+            <Button variant={showForm ? 'secondary' : 'primary'} onClick={() => setShowForm((v) => !v)}>
+              {showForm ? 'Sluiten' : 'Nieuwe taak'}
+            </Button>
+          )
         }
       />
+      <ModuleLockBanner moduleKey="tasks" moduleLabel="Taken" className="mt-4" />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StatCard title="Open taken" value={openCount} />
@@ -242,7 +278,7 @@ export default function TakenPage() {
         <StatCard title="Overdue" value={overdueCount} variant={overdueCount > 0 ? 'danger' : 'default'} />
       </div>
 
-      {showForm && (
+      {showForm && !moduleLocked && (
         <Card className="p-6 mb-6">
           <CardContent className="p-0">
             <form onSubmit={handleAdd} className="space-y-5">
@@ -325,8 +361,9 @@ export default function TakenPage() {
                       <div className="flex items-start gap-4">
                         <button
                           type="button"
-                          onClick={() => handleToggle(task)}
-                          className={`shrink-0 mt-0.5 flex items-center justify-center min-w-[44px] min-h-[44px] w-5 h-5 rounded-md border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                          onClick={() => !moduleLocked && handleToggle(task)}
+                          disabled={moduleLocked}
+                          className={`shrink-0 mt-0.5 flex items-center justify-center min-w-[44px] min-h-[44px] w-5 h-5 rounded-md border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ${
                             task.status === 'DONE' ? 'border-primary bg-primary' : 'border-border bg-card hover:border-primary'
                           }`}
                           aria-label={task.status === 'DONE' ? 'Open zetten' : 'Afvinken'}
@@ -356,7 +393,7 @@ export default function TakenPage() {
                             {task.estimated_time != null && task.estimated_time > 0 && <span>~{task.estimated_time} min</span>}
                           </div>
                         </div>
-                        <button type="button" onClick={() => handleDelete(task.id)} className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-textSecondary hover:bg-danger/10 hover:text-danger transition-colors" aria-label="Verwijderen">
+                        <button type="button" onClick={() => !moduleLocked && handleDelete(task.id)} disabled={moduleLocked} className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-textSecondary hover:bg-danger/10 hover:text-danger transition-colors disabled:opacity-50 disabled:pointer-events-none" aria-label="Verwijderen">
                           Verwijderen
                         </button>
                       </div>
@@ -378,3 +415,15 @@ export default function TakenPage() {
     </FeatureGuard>
   )
 }
+
+/*
+TESTPLAN:
+- Maak 3 verschillende users.
+- User A maakt taak: A_TEST.
+- User B maakt taak: B_TEST.
+- User C maakt taak: C_TEST.
+- Elke user genereert dagnotitie.
+- Controleer dat alleen eigen taak in output verschijnt.
+- Refresh → taken blijven bestaan.
+- Geen user ziet taken van anderen.
+*/

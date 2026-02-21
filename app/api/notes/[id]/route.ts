@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getModuleWriteContext } from '@/lib/modules/pipeline'
+import { enforceModuleUnlocked } from '@/lib/moduleLockGuard'
 import { logModuleAction } from '@/lib/modules/audit'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
-const MODULE_SLUG = 'notities'
+const MODULE_SLUG = 'notes'
 
 const updateNoteSchema = z.object({
   title: z.string().max(500).optional(),
@@ -68,18 +68,8 @@ export async function PATCH(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const ctx = await getModuleWriteContext(
-    supabase,
-    user.id,
-    user.email ?? null,
-    MODULE_SLUG
-  )
-  if (!ctx.canWrite) {
-    return NextResponse.json(
-      { error: 'Module is read-only' },
-      { status: 403 }
-    )
-  }
+  const lockResponse = await enforceModuleUnlocked(supabase, MODULE_SLUG)
+  if (lockResponse) return lockResponse
 
   const body = await request.json().catch(() => ({}))
   const parsed = updateNoteSchema.safeParse(body)
@@ -136,18 +126,8 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const ctx = await getModuleWriteContext(
-    supabase,
-    user.id,
-    user.email ?? null,
-    MODULE_SLUG
-  )
-  if (!ctx.canWrite) {
-    return NextResponse.json(
-      { error: 'Module is read-only' },
-      { status: 403 }
-    )
-  }
+  const lockResponse = await enforceModuleUnlocked(supabase, MODULE_SLUG)
+  if (lockResponse) return lockResponse
 
   const { data: deleted, error } = await supabase
     .from('notes')

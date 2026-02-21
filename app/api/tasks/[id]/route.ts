@@ -1,158 +1,166 @@
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-import { NextRequest, NextResponse } from 'next/server';
-import { TaskPriority, TaskStatus } from '@prisma/client';
-import { prisma } from '@/lib/prisma';
-import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { enforceModuleUnlocked } from '@/lib/moduleLockGuard'
 
-type RouteParams = {
-  params: {
-    id: string;
-  };
-};
+const ALLOWED_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH']
+const ALLOWED_STATUSES = ['OPEN', 'DONE']
 
 type UpdateTaskBody = {
-  title?: string;
-  details?: string | null;
-  priority?: keyof typeof TaskPriority;
-  dueDate?: string | null;
-  tags?: string[];
-  status?: keyof typeof TaskStatus;
-};
+  title?: string
+  details?: string | null
+  priority?: string
+  dueDate?: string | null
+  tags?: string[]
+  status?: string
+}
 
-export async function PATCH(req: NextRequest, { params }: RouteParams) {
-  const { id } = params;
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params
 
   if (!id) {
     return NextResponse.json(
       { error: 'Taak-id is verplicht.' },
       { status: 400 }
-    );
+    )
   }
 
-  let body: UpdateTaskBody;
-
+  let body: UpdateTaskBody
   try {
-    body = (await req.json()) as UpdateTaskBody;
+    body = (await req.json()) as UpdateTaskBody
   } catch {
     return NextResponse.json(
       { error: 'Ongeldige JSON payload.' },
       { status: 400 }
-    );
+    )
   }
 
-  const data: Record<string, unknown> = {};
-
-  if (typeof body.title === 'string') data.title = body.title;
+  const updates: Record<string, unknown> = {}
+  if (typeof body.title === 'string') updates.title = body.title
   if (typeof body.details === 'string' || body.details === null)
-    data.details = body.details;
-
-  if (body.priority) {
-    if (body.priority in TaskPriority) {
-      data.priority = TaskPriority[body.priority as keyof typeof TaskPriority];
-    } else {
+    updates.details = body.details
+  if (body.priority !== undefined) {
+    if (!ALLOWED_PRIORITIES.includes(body.priority)) {
       return NextResponse.json(
         { error: 'Ongeldige priority-waarde.' },
         { status: 400 }
-      );
+      )
     }
+    updates.priority = body.priority
   }
-
   if (body.dueDate !== undefined) {
-    data.dueDate =
+    updates.due_date =
       body.dueDate === null || body.dueDate === ''
         ? null
-        : new Date(body.dueDate);
+        : body.dueDate
   }
-
-  if (Array.isArray(body.tags)) {
-    data.tags = body.tags;
-  }
-
-  if (body.status) {
-    if (body.status in TaskStatus) {
-      data.status = TaskStatus[body.status as keyof typeof TaskStatus];
-    } else {
+  if (Array.isArray(body.tags)) updates.tags = body.tags
+  if (body.status !== undefined) {
+    if (!ALLOWED_STATUSES.includes(body.status)) {
       return NextResponse.json(
-        { error: 'Ongeldige status-waarde.' },
+        { error: 'Ongeldige status-waarde. Gebruik OPEN of DONE.' },
         { status: 400 }
-      );
+      )
     }
+    updates.status = body.status
   }
 
-  if (Object.keys(data).length === 0) {
+  if (Object.keys(updates).length === 0) {
     return NextResponse.json(
       { error: 'Geen velden om bij te werken.' },
       { status: 400 }
-    );
+    )
   }
 
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const lockResponse = await enforceModuleUnlocked(supabase, 'tasks')
+    if (lockResponse) return lockResponse
 
-    const updated = await prisma.task.updateMany({
-      where: { id, userId: user.id },
-      data
-    });
+    const { data: task, error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select()
+      .single()
 
-    if (updated.count === 0) {
+    if (error) {
       return NextResponse.json(
-        { error: 'Taak niet gevonden of geen toegang.' },
-        { status: 404 }
-      );
+        { error: error.message || 'Taak niet gevonden of geen toegang.' },
+        { status: error.code === 'PGRST116' ? 404 : 500 }
+      )
     }
-
-    const task = await prisma.task.findUnique({ where: { id } });
-    return NextResponse.json(task);
-  } catch (error) {
-    console.error('Fout in PATCH /api/tasks/[id]:', error);
+    return NextResponse.json(task)
+  } catch (err) {
+    console.error('Fout in PATCH /api/tasks/[id]:', err)
     return NextResponse.json(
       { error: 'Interne serverfout of taak niet gevonden.' },
       { status: 500 }
-    );
+    )
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: RouteParams) {
-  const { id } = params;
+export async function DELETE(
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params
 
   if (!id) {
     return NextResponse.json(
       { error: 'Taak-id is verplicht.' },
       { status: 400 }
-    );
+    )
   }
 
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const lockResponse = await enforceModuleUnlocked(supabase, 'tasks')
+    if (lockResponse) return lockResponse
 
-    const result = await prisma.task.deleteMany({
-      where: { id, userId: user.id }
-    });
-
-    if (result.count === 0) {
+    const { data: existing } = await supabase
+      .from('tasks')
+      .select('id')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (!existing) {
       return NextResponse.json(
         { error: 'Taak niet gevonden of geen toegang.' },
         { status: 404 }
-      );
+      )
     }
-
-    return new NextResponse(null, { status: 204 });
-  } catch (error) {
-    console.error('Fout in DELETE /api/tasks/[id]:', error);
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id)
+    if (error) {
+      return NextResponse.json(
+        { error: error.message || 'Verwijderen mislukt.' },
+        { status: 500 }
+      )
+    }
+    return new NextResponse(null, { status: 204 })
+  } catch (err) {
+    console.error('Fout in DELETE /api/tasks/[id]:', err)
     return NextResponse.json(
       { error: 'Interne serverfout of taak niet gevonden.' },
       { status: 500 }
-    );
+    )
   }
 }
-

@@ -75,14 +75,19 @@ export default function FinancienBankPage() {
     if (!user?.id || !form.title.trim() || !form.amount.trim()) return
     setAdding(true)
     setError(null)
+    const INSERT_TIMEOUT_MS = 12000
     try {
-      const { error: insertError } = await supabase.from('finance_entries').insert({
+      const insertPromise = supabase.from('finance_entries').insert({
         user_id: user.id,
         type: form.type,
         title: form.title.trim(),
         amount: form.amount.trim(),
         entry_date: form.entry_date,
       })
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout')), INSERT_TIMEOUT_MS)
+      )
+      const { error: insertError } = await Promise.race([insertPromise, timeoutPromise]) as { error: { message: string } | null }
       if (insertError) {
         setError(insertError.message)
         toast(insertError.message, 'error')
@@ -93,8 +98,10 @@ export default function FinancienBankPage() {
       await fetchEntries()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Er is iets misgegaan'
-      setError(msg)
-      toast(msg, 'error')
+      const isTimeout = err instanceof Error && err.message === 'Timeout'
+      const friendly = isTimeout ? 'Het duurt te lang. Controleer je internet en of Supabase bereikbaar is.' : msg
+      setError(friendly)
+      toast(friendly, 'error')
     } finally {
       setAdding(false)
     }

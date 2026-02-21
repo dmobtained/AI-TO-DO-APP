@@ -60,10 +60,10 @@ export async function PATCH(
       .from('modules')
       .update(updates)
       .eq('id', id)
-      .select('id, name, is_active, position, developer_mode, status, order_index')
+      .select('id, name, is_active, position, developer_mode')
       .single()
     if (error) {
-      const alt = await supabaseAdmin.from('modules').update(updates).eq('id', id).select('id, name, status, order_index').single()
+      const alt = await supabaseAdmin.from('modules').update(updates).eq('id', id).select('id, name, is_active, position').single()
       if (alt.error) return NextResponse.json({ error: alt.error.message }, { status: 500 })
       await logActivity(supabase, user.id, user.email ?? null, `module_updated:${moduleName}`)
       return NextResponse.json(alt.data)

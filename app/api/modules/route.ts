@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseAdmin
       .from('modules')
-      .select('id, name, slug, is_active, position, developer_mode, status, order_index')
+      .select('id, name, is_active, position, developer_mode')
 
     if (!forAdmin || !isAdmin) {
       query = query.eq('is_active', true)

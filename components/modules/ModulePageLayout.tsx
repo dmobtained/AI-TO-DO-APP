@@ -11,6 +11,8 @@ type ModulePageLayoutProps = {
   primaryAction?: React.ReactNode
   locked?: boolean
   lockedLabel?: string
+  /** When set and locked, show "Under maintenance: {lockedReason}" in the banner. */
+  lockedReason?: string | null
   statCards?: StatCardConfig[]
   children: React.ReactNode
   className?: string
@@ -22,6 +24,7 @@ export function ModulePageLayout({
   primaryAction,
   locked = false,
   lockedLabel,
+  lockedReason,
   statCards,
   children,
   className = '',
@@ -36,6 +39,7 @@ export function ModulePageLayout({
       {locked && (
         <LockedBanner
           moduleLabel={lockedLabel ?? title}
+          reason={lockedReason}
           className="mt-4"
         />
       )}

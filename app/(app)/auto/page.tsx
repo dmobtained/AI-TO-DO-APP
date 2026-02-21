@@ -13,6 +13,8 @@ import { useAuth } from '@/context/AuthProvider'
 import { getSupabaseClient } from '@/lib/supabaseClient'
 import { Fuel, Wrench, AlertCircle, Car, Plus, Trash2 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ModuleLockBanner } from '@/components/modules/ModuleLockBanner'
+import { useModuleLock } from '@/hooks/useModuleLock'
 
 type AutoEntry = {
   id: string
@@ -59,6 +61,7 @@ export default function AutoPage() {
   })
   const [adding, setAdding] = useState(false)
   const [fuelStats, setFuelStats] = useState<FuelStats | null>(null)
+  const { locked: moduleLocked } = useModuleLock('auto_entries')
 
   const loadKenteken = useCallback(async () => {
     if (!user?.id) return
@@ -195,6 +198,7 @@ export default function AutoPage() {
           </div>
         }
       />
+      <ModuleLockBanner moduleKey="auto_entries" moduleLabel="Auto" className="mt-4" />
 
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Totale kosten dit jaar" value={loading ? '€ —' : `€ ${totalCostYear.toFixed(2)}`} />
@@ -264,7 +268,7 @@ export default function AutoPage() {
                       onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                       className="w-48"
                     />
-                    <Button onClick={() => handleAdd(value)} disabled={adding || !form.amount.trim()}>
+                    <Button onClick={() => handleAdd(value)} disabled={moduleLocked || adding || !form.amount.trim()}>
                       <Plus className="h-4 w-4 mr-2" /> Toevoegen
                     </Button>
                   </div>
@@ -291,8 +295,9 @@ export default function AutoPage() {
                             <span className="font-medium text-slate-900">€ {e.amount.toFixed(2)}</span>
                             <button
                               type="button"
-                              onClick={() => handleDelete(e.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-600 rounded"
+                              onClick={() => !moduleLocked && handleDelete(e.id)}
+                              disabled={moduleLocked}
+                              className="p-1.5 text-slate-400 hover:text-red-600 rounded disabled:opacity-50 disabled:pointer-events-none"
                               aria-label="Verwijderen"
                             >
                               <Trash2 className="h-4 w-4" />

@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ConfirmDeleteDialog } from '@/components/modules/ConfirmDeleteDialog'
+import { useModuleLock } from '@/hooks/useModuleLock'
 import { StickyNote, Plus, Pin, Trash2 } from 'lucide-react'
 import { useToast } from '@/context/ToastContext'
 
@@ -33,6 +34,8 @@ export default function NotitiesPage() {
   const [loadError, setLoadError] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [editDraft, setEditDraft] = useState<{ title: string; content: string }>({ title: '', content: '' })
+  const { locked: moduleLocked, reason: lockReason } = useModuleLock('notes')
+  const effectiveCanWrite = canWrite && !moduleLocked
 
   const selectedNote = selectedId ? notes.find((n) => n.id === selectedId) : null
 
@@ -92,7 +95,7 @@ export default function NotitiesPage() {
   )
 
   useEffect(() => {
-    if (!selectedNote || !canWrite) return
+    if (!selectedNote || !effectiveCanWrite) return
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       debounceRef.current = null
@@ -107,10 +110,10 @@ export default function NotitiesPage() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [editDraft.title, editDraft.content, selectedNote, canWrite, persistNote])
+  }, [editDraft.title, editDraft.content, selectedNote, effectiveCanWrite, persistNote])
 
   const handleCreate = useCallback(async () => {
-    if (!canWrite) return
+    if (!effectiveCanWrite) return
     const res = await fetch('/api/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -183,11 +186,12 @@ export default function NotitiesPage() {
     <ModulePageLayout
       title="Notities"
       subtitle="Overzicht"
-      locked={!canWrite}
+      locked={!effectiveCanWrite}
       lockedLabel="Notities"
+      lockedReason={moduleLocked ? lockReason : null}
       statCards={statCards}
       primaryAction={
-        canWrite ? (
+        effectiveCanWrite ? (
           <Button onClick={handleCreate}>
             <Plus className="h-4 w-4 mr-2" /> Nieuwe notitie
           </Button>
@@ -237,7 +241,7 @@ export default function NotitiesPage() {
             <CardTitle className="text-textPrimary">Bewerken</CardTitle>
             <div className="flex items-center gap-2">
               {saving && <span className="text-xs text-textSecondary">Opslaan…</span>}
-              {canWrite && (
+              {effectiveCanWrite && (
                 <>
                   <Button
                     variant="ghost"
@@ -264,14 +268,14 @@ export default function NotitiesPage() {
               value={editDraft.title}
               onChange={(e) => setEditDraft((d) => ({ ...d, title: e.target.value }))}
               placeholder="Titel"
-              disabled={!canWrite}
+              disabled={!effectiveCanWrite}
             />
             <textarea
               className="w-full min-h-[200px] rounded-xl border border-border bg-card px-4 py-3 text-sm text-textPrimary placeholder:text-textSecondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
               value={editDraft.content}
               onChange={(e) => setEditDraft((d) => ({ ...d, content: e.target.value }))}
               placeholder="Inhoud"
-              disabled={!canWrite}
+              disabled={!effectiveCanWrite}
             />
           </CardContent>
         </Card>

@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       })
     })
 
-    results.sort((a, b) => a.title.localeCompare(b.title))
+    results.sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
     return NextResponse.json({ results: results.slice(0, 15) })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

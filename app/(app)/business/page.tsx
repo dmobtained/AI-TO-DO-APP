@@ -8,6 +8,8 @@ import { PageContainer } from '@/components/ui/PageContainer'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useToast } from '@/context/ToastContext'
+import { useModuleLock } from '@/hooks/useModuleLock'
+import { ModuleLockBanner } from '@/components/modules/ModuleLockBanner'
 import { UserPlus, Phone, Handshake, Plus, Trash2, ChevronRight, ChevronLeft } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 
@@ -32,6 +34,7 @@ export default function BusinessPage() {
   const [loading, setLoading] = useState(true)
   const [addingStage, setAddingStage] = useState<'lead' | 'gesprek' | 'deal' | null>(null)
   const [newTitle, setNewTitle] = useState('')
+  const { locked: moduleLocked } = useModuleLock('leads')
 
   const fetchLeads = useCallback(async () => {
     setLoading(true)
@@ -101,6 +104,7 @@ export default function BusinessPage() {
   return (
     <PageContainer>
       <SectionHeader title="Business pipeline" subtitle="Leads en deals" />
+      <ModuleLockBanner moduleKey="leads" moduleLabel="Leads" className="mt-4" />
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard title="Totaal leads" value={loading ? '—' : String(totalLeads)} />
         <StatCard title="Conversieratio" value={loading ? '—' : `${conversie}%`} />
@@ -119,7 +123,8 @@ export default function BusinessPage() {
                 </CardTitle>
                 <Button
                   variant="ghost"
-                  onClick={() => setAddingStage(id)}
+                  onClick={() => !moduleLocked && setAddingStage(id)}
+                  disabled={moduleLocked}
                   className="shrink-0"
                   aria-label={`${label} toevoegen`}
                 >
@@ -136,7 +141,7 @@ export default function BusinessPage() {
                       onKeyDown={(e) => e.key === 'Enter' && handleAdd(id)}
                     />
                     <div className="flex gap-2">
-                      <Button onClick={() => handleAdd(id)} disabled={!newTitle.trim()}>
+                      <Button onClick={() => handleAdd(id)} disabled={moduleLocked || !newTitle.trim()}>
                         Toevoegen
                       </Button>
                       <Button variant="ghost" onClick={() => { setAddingStage(null); setNewTitle('') }}>
@@ -164,8 +169,9 @@ export default function BusinessPage() {
                           {!isFirst && (
                             <button
                               type="button"
-                              onClick={() => handleMove(lead, 'prev')}
-                              className="p-1.5 text-slate-500 hover:text-[#2563eb] rounded"
+                              onClick={() => !moduleLocked && handleMove(lead, 'prev')}
+                              disabled={moduleLocked}
+                              className="p-1.5 text-slate-500 hover:text-[#2563eb] rounded disabled:opacity-50 disabled:pointer-events-none"
                               aria-label="Naar vorige kolom"
                             >
                               <ChevronLeft className="h-4 w-4" />
@@ -175,8 +181,9 @@ export default function BusinessPage() {
                           {!isLast && (
                             <button
                               type="button"
-                              onClick={() => handleMove(lead, 'next')}
-                              className="p-1.5 text-slate-500 hover:text-[#2563eb] rounded"
+                              onClick={() => !moduleLocked && handleMove(lead, 'next')}
+                              disabled={moduleLocked}
+                              className="p-1.5 text-slate-500 hover:text-[#2563eb] rounded disabled:opacity-50 disabled:pointer-events-none"
                               aria-label="Naar volgende kolom"
                             >
                               <ChevronRight className="h-4 w-4" />
@@ -184,8 +191,9 @@ export default function BusinessPage() {
                           )}
                           <button
                             type="button"
-                            onClick={() => handleDelete(lead.id)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 rounded"
+                            onClick={() => !moduleLocked && handleDelete(lead.id)}
+                            disabled={moduleLocked}
+                            className="p-1.5 text-slate-400 hover:text-red-600 rounded disabled:opacity-50 disabled:pointer-events-none"
                             aria-label="Verwijderen"
                           >
                             <Trash2 className="h-4 w-4" />

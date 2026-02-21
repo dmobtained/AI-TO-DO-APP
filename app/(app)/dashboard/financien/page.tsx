@@ -89,7 +89,7 @@ export default function FinancienOverviewPage() {
       map[cat].push(e)
     }
     for (const s of SECTIONS) {
-      (map[s.id] ?? []).sort((a, b) => b.entry_date.localeCompare(a.entry_date))
+      (map[s.id] ?? []).sort((a, b) => (b.entry_date ?? '').localeCompare(a.entry_date ?? ''))
     }
     return map
   }, [entries])

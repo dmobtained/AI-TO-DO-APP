@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useDashboardUser } from '@/hooks/useDashboardUser'
 import { useDashboard } from '@/context/DashboardContext'
+import { useToast } from '@/context/ToastContext'
 import { FeatureGuard } from '@/components/FeatureGuard'
 import type { FinanceEntry } from '../components/types'
 import { getMonthRange } from '../components/types'
@@ -34,7 +35,7 @@ export default function FinancienBelastingPage() {
     }
     const list = Array.isArray(data) ? data : (data ? [data] : [])
     setEntries(list as FinanceEntry[])
-  }, [user?.id, first, last])
+  }, [user?.id, first, last, toast])
 
   useEffect(() => {
     if (authLoading) return

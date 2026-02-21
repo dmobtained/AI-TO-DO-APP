@@ -43,8 +43,13 @@ export async function POST() {
 
     const tasks = (tasksData ?? []) as { title: string; status: string; due_date: string | null }[]
 
+    if (tasks.length === 0) {
+      return NextResponse.json({ error: 'Geen open taken.' }, { status: 400 })
+    }
+
     const payload = {
       type: 'daynote',
+      user_id: user.id,
       tasks: tasks.map((t): DaynoteTaskPayload => ({
         title: t.title,
         status: t.status,
@@ -87,14 +92,16 @@ export async function POST() {
       )
     }
 
-    try {
-      await supabase.from('ai_notes').insert({
-        user_id: user.id,
-        note,
-        created_at: new Date().toISOString(),
-      })
-    } catch {
-      // Optioneel: negeren als opslag mislukt
+    const { error: insertError } = await supabase.from('ai_notes').insert({
+      user_id: user.id,
+      note,
+      created_at: new Date().toISOString(),
+    })
+    if (insertError) {
+      return NextResponse.json(
+        { error: `Notitie kon niet worden opgeslagen: ${insertError.message}` },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ note })

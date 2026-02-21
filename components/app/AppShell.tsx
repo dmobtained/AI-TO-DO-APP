@@ -105,7 +105,7 @@ export function AppShell({
     )
   }
 
-  const linkBase = 'flex min-w-0 flex-1 items-center gap-3 rounded-[10px] px-2 py-2.5 text-left text-sm font-medium transition-all duration-[180ms]'
+  const linkBase = 'flex min-w-0 flex-1 items-center gap-3 rounded-[10px] px-2 py-2.5 text-left text-sm font-medium transition-all duration-[180ms] cursor-pointer min-h-[44px]'
   const linkDefault = 'text-primary/90 hover:bg-white/20 hover:text-textPrimary'
   const linkActive = 'bg-white/25 text-textPrimary font-semibold border-l-[3px] border-l-primary'
 
@@ -167,14 +167,14 @@ export function AppShell({
                       <Link
                         href={item.path}
                         onClick={() => setSidebarOpen(false)}
-                        className={`${linkBase} ${isAdminItem ? 'opacity-90' : ''} ${isActive ? linkActive : linkDefault}`}
+                        className={`flex-1 min-w-0 ${linkBase} ${isAdminItem ? 'opacity-90' : ''} ${isActive ? linkActive : linkDefault}`}
                       >
                         <Icon className="h-5 w-5 shrink-0" />
                         <span className="truncate">{item.label}</span>
                       </Link>
                     </div>
                     {isOpen && item.children && (
-                      <div className="ml-4 flex flex-col border-l border-border pl-3">
+                      <div className="ml-4 flex flex-col border-l border-border pl-3 gap-0.5">
                         {item.children.map((sub) => {
                           const subActive = pathname === sub.path
                           return (
@@ -182,8 +182,8 @@ export function AppShell({
                               key={sub.path}
                               href={sub.path}
                               onClick={() => setSidebarOpen(false)}
-                              className={`mt-0.5 rounded-[10px] px-2 py-2 text-sm transition-colors duration-[180ms] hover:bg-white/20 ${
-                                subActive ? 'bg-white/25 font-semibold text-textPrimary' : 'text-primary/90 hover:text-textPrimary'
+                              className={`block w-full min-h-[40px] rounded-[10px] px-2 py-2.5 text-sm transition-colors duration-[180ms] cursor-pointer flex items-center ${
+                                subActive ? 'bg-white/25 font-semibold text-textPrimary' : 'text-primary/90 hover:bg-white/20 hover:text-textPrimary'
                               }`}
                             >
                               {sub.label}
@@ -201,7 +201,7 @@ export function AppShell({
                   key={item.path}
                   href={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`${linkBase} ${isAdminItem ? 'opacity-90' : ''} ${isActive ? linkActive : linkDefault}`}
+                  className={`block w-full ${linkBase} ${isAdminItem ? 'opacity-90' : ''} ${isActive ? linkActive : linkDefault}`}
                 >
                   <Icon className="h-5 w-5 shrink-0" />
                   <span className="truncate">{item.label}</span>

@@ -22,6 +22,15 @@ Voer het SQL van elk bestand uit, van oud naar nieuw:
 | 10 | `supabase/migrations/20250222000000_auto_odometer_kenteken.sql` | **auto_entries**: kolom `odometer_km` toevoegen indien ontbreekt. **profiles**: kolom `kenteken` (nummerplaat) |
 | 11 | `supabase/migrations/20250223000000_profiles_rls_no_recursion.sql` | **profiles** RLS: alle policies vervangen door alleen eigen rij (geen oneindige recursie) |
 | 12 | `supabase/migrations/20250224000000_activity_logs_view.sql` | View **activity_logs** als alias voor **activity_log** (verhelpt fout "relation activity_logs does not exist") |
+| 13 | `supabase/migrations/20250225000000_debts_investments.sql` | Tabellen **debts** en **investments** + RLS |
+| 14 | `supabase/migrations/20250225000001_server_functions_and_triggers.sql` | Serverfuncties en triggers (o.a. voor activity_log) |
+| 15 | `supabase/migrations/20250225000002_auto_entries_liters.sql` | **auto_entries**: kolom `liters` |
+| 16 | `supabase/migrations/20250226000000_agenda_events.sql` | Tabel **agenda_events** (agenda-module) |
+| 17 | `supabase/migrations/20250226100000_agenda_events_end_date.sql` | **agenda_events**: kolom `event_date_end` |
+| 18 | `supabase/migrations/20250227000000_debts_current_balance.sql` | **debts**: kolom `current_balance` (indien nog niet aanwezig) |
+| 19 | `supabase/migrations/20250228000000_tasks_status_lowercase_rls.sql` | **tasks**: status `'open'`/`'done'` (lowercase), RLS per actie |
+| 20 | `supabase/migrations/20250228000001_tasks_trigger_lowercase.sql` | Trigger: **tasks.status** altijd lowercase |
+| 21 | `supabase/migrations/20250228000002_debts_investments_trigger_lowercase.sql` | Triggers: **debts** en **investments** status/kolommen lowercase |
 
 **Let op:** Als je de fout "relation public.activity_logs does not exist" of "infinite recursion in policy for relation profiles" ziet, voer migratie 11 en 12 uit.
 
@@ -35,7 +44,7 @@ Voer het SQL van elk bestand uit, van oud naar nieuw:
 
 - **Authentication → Users:** Nieuwe gebruikers krijgen automatisch een rij in **profiles** (trigger `on_auth_user_created`).
 - **Table Editor:** Controleer of deze tabellen bestaan:  
-  `profiles`, `tasks`, `finance_entries`, `emails`, `settings`, `modules`, `activity_log`, `recurring_expenses`, `notes`, `module_locks`, `ai_notes`, `auto_entries`, `leads`, `meeting_notes`.
+  `profiles`, `tasks`, `finance_entries`, `emails`, `settings`, `modules`, `activity_log`, `recurring_expenses`, `notes`, `module_locks`, `ai_notes`, `auto_entries`, `leads`, `meeting_notes`, `agenda_events`, `debts`, `investments`.
 - **modules:** Minimaal rijen voor o.a. dashboard, taken, financien, email, instellingen (wordt door migratie 2 en 9 geseed).
 - **module_locks:** Minimaal één rij met `slug = 'notities'` en `locked = false` (migratie 7).
 
@@ -80,6 +89,12 @@ NEXT_PUBLIC_N8N_AI_HUB_WEBHOOK=https://...
 | Persoonlijke info (BSN, IBAN, lengte, gewicht) | **profiles** (kolommen bsn, iban, length_cm, weight_kg) |
 | Admin (activity, users) | **activity_log**, **profiles** |
 | Feature modules / locks | **modules**, **module_locks** |
+| Agenda (activiteiten, werkrooster) | **agenda_events** |
+| Schulden / aflossen | **debts** |
+| Beleggen | **investments** |
+| Vaste lasten | **recurring_expenses** |
+
+Zie ook **docs/COMPLEET_OVERZICHT.md** voor het volledige plaatje (SQL-volgorde, scripts, n8n, twee taken-systemen).
 
 ---
 

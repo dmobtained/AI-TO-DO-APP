@@ -202,9 +202,19 @@ export default function DashboardPage() {
       return
     }
 
+    if (openTasks.length === 0) {
+      setDaynoteStatus('error')
+      setDaynoteError('Je hebt geen open taken.')
+      toast('Je hebt geen open taken.', 'error')
+      return
+    }
+
     setDaynoteStatus('loading')
     setDaynoteError(null)
     setDaynote(null)
+
+    console.log('USER:', user.id)
+    console.log('TASKS SENT:', openTasks)
 
     try {
       const res = await fetch('/api/ai/daynote', { method: 'POST', credentials: 'include' })
@@ -241,7 +251,7 @@ export default function DashboardPage() {
       setDaynoteError(msg)
       toast(msg, 'error')
     }
-  }, [])
+  }, [openTasks])
 
   const freeToSpend = incomeMonth - expenseMonth
   const salarisMaand = incomeMonth

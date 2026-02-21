@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useDashboardUser } from '@/hooks/useDashboardUser'
+import { useToast } from '@/context/ToastContext'
 import { PageContainer } from '@/components/ui/PageContainer'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -125,6 +126,7 @@ type DayItem = { type: 'task'; task: Task } | { type: 'event'; event: AgendaEven
 
 export default function AgendaPage() {
   const router = useRouter()
+  const toast = useToast()
   const { user, loading: authLoading } = useDashboardUser()
   const [tasks, setTasks] = useState<Task[]>([])
   const [events, setEvents] = useState<AgendaEvent[]>([])
@@ -158,10 +160,11 @@ export default function AgendaPage() {
       .order('due_date', { ascending: true })
     if (error) {
       setTasks([])
+      toast(error.message, 'error')
       return
     }
     setTasks((data ?? []) as Task[])
-  }, [user?.id])
+  }, [user?.id, toast])
 
   const fetchEvents = useCallback(async () => {
     if (!user?.id) return
@@ -173,10 +176,11 @@ export default function AgendaPage() {
       .order('event_date', { ascending: true })
     if (error) {
       setEvents([])
+      toast(error.message, 'error')
       return
     }
     setEvents((data ?? []) as AgendaEvent[])
-  }, [user?.id])
+  }, [user?.id, toast])
 
   useEffect(() => {
     if (authLoading) return
@@ -233,7 +237,10 @@ export default function AgendaPage() {
       color: newColor,
     })
     setSaving(false)
-    if (error) return
+    if (error) {
+      toast(error.message, 'error')
+      return
+    }
     setNewTitle('')
     setNewDate(new Date().toISOString().slice(0, 10))
     setNewDateEnd('')
@@ -245,7 +252,12 @@ export default function AgendaPage() {
   const handleDeleteEvent = async (id: string) => {
     if (!user?.id) return
     const supabase = getSupabaseClient()
-    await supabase.from('agenda_events').delete().eq('id', id).eq('user_id', user.id)
+    const { error } = await supabase.from('agenda_events').delete().eq('id', id).eq('user_id', user.id)
+    if (error) {
+      toast(error.message, 'error')
+      return
+    }
+    toast('Activiteit verwijderd.')
     fetchEvents()
   }
 
@@ -283,8 +295,10 @@ export default function AgendaPage() {
     setImporting(false)
     if (error) {
       setImportError(error.message)
+      toast(error.message, 'error')
       return
     }
+    toast('Werkrooster geïmporteerd.')
     setRosterPreview([])
     setShowImport(false)
     fetchEvents()

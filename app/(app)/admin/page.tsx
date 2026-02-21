@@ -9,7 +9,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import { Input } from '@/components/ui/Input'
 import { PageContainer } from '@/components/ui/PageContainer'
-import { Activity, Users, Settings } from 'lucide-react'
+import Link from 'next/link'
+import { Activity, Users, Settings, Lock } from 'lucide-react'
 import { useToast } from '@/context/ToastContext'
 
 type ActivityRow = {
@@ -36,7 +37,7 @@ export default function AdminPage() {
   const [search, setSearch] = useState('')
   const [actorFilter, setActorFilter] = useState('')
   const [settings, setSettings] = useState<{ key: string; value: unknown }[]>([])
-  const [moduleLocks, setModuleLocks] = useState<{ slug: string; locked: boolean }[]>([])
+  const [moduleLocks, setModuleLocks] = useState<{ module_key: string; label: string; is_locked: boolean }[]>([])
   const [settingsLoading, setSettingsLoading] = useState(false)
   const [locksLoading, setLocksLoading] = useState(false)
   const [updatingSetting, setUpdatingSetting] = useState<string | null>(null)
@@ -116,7 +117,7 @@ export default function AdminPage() {
     try {
       const res = await fetch('/api/admin/module-locks', { credentials: 'include' })
       const data = await res.json().catch(() => ({}))
-      setModuleLocks(Array.isArray(data.locks) ? data.locks : [])
+      setModuleLocks(Array.isArray(data.modules) ? data.modules : [])
     } catch {
       setModuleLocks([])
     } finally {
@@ -164,21 +165,21 @@ export default function AdminPage() {
   )
 
   const handleLockChange = useCallback(
-    async (slug: string, locked: boolean) => {
-      setUpdatingLock(slug)
+    async (moduleKey: string, isLocked: boolean) => {
+      setUpdatingLock(moduleKey)
       try {
         const res = await fetch('/api/admin/module-locks', {
-          method: 'PATCH',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ slug, locked }),
+          body: JSON.stringify({ module_key: moduleKey, is_locked: isLocked, reason: isLocked ? 'Onderhoud' : '' }),
         })
         const data = await res.json().catch(() => ({}))
         if (!res.ok) {
           toast(data.error ?? 'Opslaan mislukt', 'error')
           return
         }
-        setModuleLocks((prev) => prev.map((l) => (l.slug === slug ? { slug, locked } : l)))
+        setModuleLocks((prev) => prev.map((m) => (m.module_key === moduleKey ? { ...m, is_locked: isLocked } : m)))
         toast('Opgeslagen')
       } catch {
         toast('Opslaan mislukt', 'error')
@@ -332,23 +333,26 @@ export default function AdminPage() {
             <CardHeader className="p-0 pb-4">
               <CardTitle className="text-textPrimary">Module vergrendelingen</CardTitle>
               <p className="text-sm text-textSecondary font-normal mt-1">Vergrendelde modules zijn voor gewone gebruikers alleen-lezen.</p>
+              <Link href="/admin/modules" className="inline-flex items-center gap-2 mt-2 text-sm text-primary hover:underline">
+                <Lock className="h-4 w-4" /> Module locks beheren (reden, per module)
+              </Link>
             </CardHeader>
             <CardContent className="p-0">
               {locksLoading ? (
                 <p className="text-textSecondary text-sm">Laden…</p>
               ) : moduleLocks.length === 0 ? (
-                <p className="text-textSecondary text-sm">Geen module locks geconfigureerd. Voeg in de database rijen toe in <code className="bg-hover px-1 rounded">module_locks</code> (bijv. slug: notities).</p>
+                <p className="text-textSecondary text-sm">Geen modules. Ga naar <Link href="/admin/modules" className="text-primary hover:underline">Module locks</Link> om te beheren.</p>
               ) : (
                 <ul className="space-y-3">
-                  {moduleLocks.map((lock) => (
-                    <li key={lock.slug} className="flex items-center justify-between gap-4 py-2 border-b border-border last:border-0">
-                      <span className="font-medium text-textPrimary capitalize">{lock.slug}</span>
+                  {moduleLocks.map((m) => (
+                    <li key={m.module_key} className="flex items-center justify-between gap-4 py-2 border-b border-border last:border-0">
+                      <span className="font-medium text-textPrimary">{m.label}</span>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={lock.locked}
-                          onChange={(e) => handleLockChange(lock.slug, e.target.checked)}
-                          disabled={updatingLock === lock.slug}
+                          checked={m.is_locked}
+                          onChange={(e) => handleLockChange(m.module_key, e.target.checked)}
+                          disabled={updatingLock === m.module_key}
                           className="rounded border-border text-primary focus:ring-primary"
                         />
                         <span className="text-sm text-textSecondary">Vergrendeld (alleen-lezen voor users)</span>

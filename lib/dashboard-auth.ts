@@ -65,7 +65,7 @@ export async function getDashboardAuth(): Promise<DashboardAuthResult> {
   try {
     const { data: rows } = await client
       .from('modules')
-      .select('id, name, slug, is_active, enabled, status, order_index, position')
+      .select('id, name, is_active, position, developer_mode')
     const raw = (rows ?? []) as RawModuleRow[]
     flags = buildFeatureFlags(raw)
     const nameToFeatureKey: Record<string, import('@/lib/feature-flags').FeatureKey> = {
