@@ -18,11 +18,6 @@ export type FeatureKey = (typeof FEATURE_KEYS)[number]
 
 export type FeatureFlags = Record<FeatureKey, boolean>
 
-/** Default: all off for non-admin if not in DB */
-export function defaultFeatureFlags(): FeatureFlags {
-  return FEATURE_KEYS.reduce((acc, k) => ({ ...acc, [k]: false }), {} as FeatureFlags)
-}
-
 export type RawModuleRow = {
   id: string
   name?: string
@@ -60,7 +55,14 @@ export function buildFeatureFlags(rows: RawModuleRow[]): FeatureFlags {
 }
 
 /** Core modules: always visible for all users (admin and user). */
-const CORE_FEATURE_KEYS: FeatureKey[] = ['dashboard_tasks_list', 'email_module', 'finance_module']
+export const CORE_FEATURE_KEYS: FeatureKey[] = ['dashboard_tasks_list', 'email_module', 'finance_module']
+
+/** Default: core modules aan voor iedereen, rest uit tot DB/instellingen ze aanzetten. */
+export function defaultFeatureFlags(): FeatureFlags {
+  const flags = FEATURE_KEYS.reduce((acc, k) => ({ ...acc, [k]: false }), {} as FeatureFlags)
+  CORE_FEATURE_KEYS.forEach((k) => { flags[k] = true })
+  return flags
+}
 
 /**
  * For admin: can see all features. For user: core modules always, others only if flag is true.

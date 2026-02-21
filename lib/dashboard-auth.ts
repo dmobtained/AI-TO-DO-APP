@@ -105,6 +105,7 @@ export async function getDashboardAuth(): Promise<DashboardAuthResult> {
         })
       }
     } catch {
+      flags = defaultFeatureFlags()
       ['dashboard', 'taken', 'financien', 'email', 'instellingen', 'admin'].forEach((name) => {
         moduleStatus[name] = true
       })
