@@ -51,11 +51,12 @@ export default function FinancienOverviewPage() {
       .order('entry_date', { ascending: false })
     if (err) {
       setEntries([])
+      toast(err.message || 'Financiën laden mislukt', 'error')
       return
     }
     const list = Array.isArray(data) ? data : (data ? [data] : [])
     setEntries(list as FinanceEntry[])
-  }, [user?.id, first, last])
+  }, [user?.id, first, last, toast])
 
   useEffect(() => {
     if (authLoading) return

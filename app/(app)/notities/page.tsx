@@ -133,15 +133,17 @@ export default function NotitiesPage() {
     setDeleteLoading(true)
     const res = await fetch(`/api/notes/${deleteId}`, { method: 'DELETE', credentials: 'include' })
     setDeleteLoading(false)
-    setDeleteId(null)
     if (!res.ok) {
-      toast('Verwijderen mislukt', 'error')
+      const data = await res.json().catch(() => ({}))
+      toast(data.error ?? 'Verwijderen mislukt', 'error')
       return
     }
-    setNotes((prev) => prev.filter((n) => n.id !== deleteId))
-    if (selectedId === deleteId) setSelectedId(null)
+    const idToRemove = deleteId
+    setDeleteId(null)
+    setNotes((prev) => prev.filter((n) => n.id !== idToRemove))
+    if (selectedId === idToRemove) setSelectedId(null)
     toast('Notitie verwijderd')
-  }, [deleteId, selectedId])
+  }, [deleteId, selectedId, toast])
 
   const handleTogglePinned = useCallback(
     async (note: Note) => {
@@ -152,17 +154,22 @@ export default function NotitiesPage() {
         credentials: 'include',
         body: JSON.stringify({ pinned: !note.pinned }),
       })
-      if (!res.ok) return
-      const data = await res.json()
-      setNotes((prev) => prev.map((n) => (n.id === note.id ? { ...n, ...data.note } : n)))
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast(data.error ?? 'Pinnen/losmaken mislukt', 'error')
+        return
+      }
+      if (data?.note) {
+        setNotes((prev) => prev.map((n) => (n.id === note.id ? { ...n, ...data.note } : n)))
+      }
     },
-    [canWrite]
+    [canWrite, toast]
   )
 
   if (loading) {
     return (
       <ModulePageLayout title="Notities" subtitle="Laden…">
-        <div className="h-32 flex items-center justify-center text-slate-500 text-sm">Laden…</div>
+        <div className="h-32 flex items-center justify-center text-textSecondary text-sm">Laden…</div>
       </ModulePageLayout>
     )
   }
@@ -188,16 +195,16 @@ export default function NotitiesPage() {
       }
     >
       {!loading && (loadError || notes.length === 0) && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 text-center">
+        <div className="rounded-xl border border-border bg-card p-6 text-center">
           {loadError ? (
             <>
-              <p className="text-slate-600 mb-3">Notities konden niet worden geladen. Controleer of je bent ingelogd en of de database (Supabase) draait.</p>
+              <p className="text-textSecondary mb-3">Notities konden niet worden geladen. Controleer of je bent ingelogd en of de database (Supabase) draait.</p>
               <Button variant="secondary" onClick={() => { setLoading(true); fetchNotes().finally(() => setLoading(false)) }}>
                 Opnieuw laden
               </Button>
             </>
           ) : (
-            <p className="text-slate-500">Nog geen notities. Klik op &quot;Nieuwe notitie&quot; om te beginnen.</p>
+            <p className="text-textSecondary">Nog geen notities. Klik op &quot;Nieuwe notitie&quot; om te beginnen.</p>
           )}
         </div>
       )}
@@ -206,18 +213,18 @@ export default function NotitiesPage() {
         {notes.map((note) => (
           <Card
             key={note.id}
-            className={`p-6 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${selectedId === note.id ? 'ring-2 ring-[#2563eb]' : ''}`}
+            className={`p-6 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${selectedId === note.id ? 'ring-2 ring-primary' : ''}`}
             onClick={() => setSelectedId(selectedId === note.id ? null : note.id)}
           >
             <div className="flex items-start gap-2">
-              <StickyNote className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />
+              <StickyNote className="h-5 w-5 text-textSecondary shrink-0 mt-0.5" />
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-slate-900 truncate">{note.title || 'Zonder titel'}</p>
-                <p className="text-sm text-slate-500">
+                <p className="font-medium text-textPrimary truncate">{note.title || 'Zonder titel'}</p>
+                <p className="text-sm text-textSecondary">
                   {new Date(note.updated_at).toLocaleDateString('nl-NL')}
                 </p>
               </div>
-              {note.pinned && <Pin className="h-4 w-4 text-[#2563eb] shrink-0" />}
+              {note.pinned && <Pin className="h-4 w-4 text-primary shrink-0" />}
             </div>
           </Card>
         ))}
@@ -227,9 +234,9 @@ export default function NotitiesPage() {
       {selectedNote && (
         <Card className="mt-8 p-6">
           <CardHeader className="p-0 pb-4 flex justify-between items-center flex-wrap gap-2">
-            <CardTitle className="text-slate-900">Bewerken</CardTitle>
+            <CardTitle className="text-textPrimary">Bewerken</CardTitle>
             <div className="flex items-center gap-2">
-              {saving && <span className="text-xs text-slate-500">Opslaan…</span>}
+              {saving && <span className="text-xs text-textSecondary">Opslaan…</span>}
               {canWrite && (
                 <>
                   <Button
@@ -237,7 +244,7 @@ export default function NotitiesPage() {
                     onClick={() => handleTogglePinned(selectedNote)}
                     title={selectedNote.pinned ? 'Losmaken' : 'Pinnen'}
                   >
-                    <Pin className={`h-4 w-4 ${selectedNote.pinned ? 'text-[#2563eb]' : ''}`} />
+                    <Pin className={`h-4 w-4 ${selectedNote.pinned ? 'text-primary' : ''}`} />
                   </Button>
                   <Button
                     variant="ghost"
@@ -260,7 +267,7 @@ export default function NotitiesPage() {
               disabled={!canWrite}
             />
             <textarea
-              className="w-full min-h-[200px] rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20 resize-y"
+              className="w-full min-h-[200px] rounded-xl border border-border bg-card px-4 py-3 text-sm text-textPrimary placeholder:text-textSecondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
               value={editDraft.content}
               onChange={(e) => setEditDraft((d) => ({ ...d, content: e.target.value }))}
               placeholder="Inhoud"

@@ -550,7 +550,7 @@ export default function AgendaPage() {
                           <button
                             type="button"
                             onClick={() => handleDeleteEvent(ev.id)}
-                            className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1 min-w-[28px] min-h-[28px] rounded hover:bg-white/20 shrink-0 touch-manipulation"
+                            className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-2 min-w-[44px] min-h-[44px] rounded hover:bg-white/20 shrink-0 touch-manipulation flex items-center justify-center"
                             aria-label="Verwijderen"
                           >
                             <X className="h-3 w-3" />

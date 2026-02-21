@@ -10,6 +10,7 @@ import { FeatureGuard } from '@/components/FeatureGuard'
 import type { FinanceEntry } from '../components/types'
 import { getMonthRange } from '../components/types'
 import { BelastingSection } from '../components/BelastingSection'
+import { PageContainer } from '@/components/ui/PageContainer'
 
 export default function FinancienBelastingPage() {
   const supabase = getSupabaseClient()
@@ -57,21 +58,21 @@ export default function FinancienBelastingPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="mx-auto max-w-4xl">
-        <div className="h-8 w-48 rounded bg-slate-200 animate-pulse" />
-      </div>
+      <PageContainer>
+        <div className="h-8 w-48 rounded bg-hover animate-pulse" />
+      </PageContainer>
     )
   }
 
   return (
     <FeatureGuard feature="finance_module">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="text-2xl font-semibold text-slate-900">Belasting</h1>
-        <p className="text-slate-500 text-sm mt-0.5">Belasting berekeningen</p>
+      <PageContainer>
+        <h1 className="text-2xl font-semibold text-textPrimary">Belasting</h1>
+        <p className="text-textSecondary text-sm mt-0.5">Belasting berekeningen</p>
         <div className="mt-6">
           <BelastingSection totalIncome={totalIncome} totalExpense={totalExpense} balance={balance} />
         </div>
-      </div>
+      </PageContainer>
     </FeatureGuard>
   )
 }

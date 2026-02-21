@@ -81,7 +81,7 @@ export default function VergaderingenPage() {
     setTimeout(() => {
       if (notities.trim().length > 0) {
         setSummary(
-          'Samenvatting (demo): AI-samenvatting kan later gekoppeld worden aan een webhook (bijv. N8N). Hier tonen we een korte indicatie op basis van je notities.\n\nKernpunten:\n• Notities worden opgeslagen.\n• Klik op "Opslaan" om je wijzigingen te bewaren.'
+          'Demo-samenvatting: een echte AI-samenvatting kan later gekoppeld worden aan een webhook (bijv. N8N).\n\nKernpunten:\n• Notities worden opgeslagen.\n• Klik op "Opslaan" om je wijzigingen te bewaren.'
         )
       } else {
         setSummary('Voeg eerst notities toe en klik op Opslaan. Daarna kan AI een samenvatting genereren.')
@@ -94,7 +94,7 @@ export default function VergaderingenPage() {
     return (
       <PageContainer>
         <SectionHeader title="Vergaderingen" subtitle="Laden…" />
-        <div className="mt-8 h-32 flex items-center justify-center text-slate-500 text-sm">Laden…</div>
+        <div className="mt-8 h-32 flex items-center justify-center text-textSecondary text-sm">Laden…</div>
       </PageContainer>
     )
   }
@@ -105,7 +105,7 @@ export default function VergaderingenPage() {
 
       <Card className="mt-8 p-6">
         <CardHeader className="p-0 pb-4 flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-slate-900">Notities</CardTitle>
+          <CardTitle className="text-textPrimary">Notities</CardTitle>
           <Button variant="secondary" onClick={handleSave} disabled={saving}>
             <Save className="h-4 w-4 mr-2" /> {saving ? 'Bezig…' : 'Opslaan'}
           </Button>
@@ -115,7 +115,7 @@ export default function VergaderingenPage() {
             value={notities}
             onChange={(e) => setNotities(e.target.value)}
             placeholder="Typ hier je vergadernotities..."
-            className="w-full min-h-[120px] rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20 resize-y"
+            className="w-full min-h-[120px] rounded-xl border border-border bg-card px-4 py-3 text-sm text-textPrimary placeholder:text-textSecondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
             rows={5}
           />
           <Button className="mt-4" onClick={handleSummarize} disabled={loading}>
@@ -125,7 +125,7 @@ export default function VergaderingenPage() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             )}
-            <Sparkles className="h-4 w-4 mr-2" /> AI samenvatten
+            <Sparkles className="h-4 w-4 mr-2" /> Demo-samenvatting
           </Button>
         </CardContent>
       </Card>
@@ -133,7 +133,7 @@ export default function VergaderingenPage() {
       {(loading || summary) && (
         <Card className="mt-8 p-6 min-h-[120px]">
           <CardHeader className="p-0 pb-4">
-            <CardTitle className="text-slate-900">Samenvatting</CardTitle>
+            <CardTitle className="text-textPrimary">Samenvatting</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
@@ -145,7 +145,7 @@ export default function VergaderingenPage() {
                 Bezig met samenvatten…
               </div>
             ) : (
-              <p className="text-slate-700 text-sm whitespace-pre-line">{summary}</p>
+              <p className="text-textPrimary text-sm whitespace-pre-line">{summary}</p>
             )}
           </CardContent>
         </Card>

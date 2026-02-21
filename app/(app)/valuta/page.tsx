@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { currencyList, fetchRates, convert, type RatesMap } from '@/lib/currency'
+import { currencyList, fetchRates, convert, type RatesMap, type RatesSource } from '@/lib/currency'
 import { SectionHeader } from '@/components/ui/SectionHeader'
+import { PageContainer } from '@/components/ui/PageContainer'
 import { ArrowRightLeft, RefreshCw } from 'lucide-react'
 
 const selectClass =
@@ -17,6 +18,7 @@ export default function ValutaPage() {
   const [to, setTo] = useState('USD')
   const [rates, setRates] = useState<RatesMap | null>(null)
   const [updatedAt, setUpdatedAt] = useState<number>(0)
+  const [ratesSource, setRatesSource] = useState<RatesSource>('api')
   const [loading, setLoading] = useState(true)
   const [searchFrom, setSearchFrom] = useState('')
   const [searchTo, setSearchTo] = useState('')
@@ -27,6 +29,7 @@ export default function ValutaPage() {
       const result = await fetchRates(base)
       setRates(result.rates)
       setUpdatedAt(result.updatedAt)
+      setRatesSource(result.source)
     } finally {
       setLoading(false)
     }
@@ -62,8 +65,13 @@ export default function ValutaPage() {
   const lastUpdated = updatedAt ? new Date(updatedAt).toLocaleString('nl-NL') : '—'
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <PageContainer className="max-w-4xl space-y-6">
       <SectionHeader title="Valuta" subtitle="Omrekenen op basis van actuele koersen (Frankfurter/ECB)." />
+      {ratesSource === 'mock' && (
+        <div className="rounded-[10px] border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-700 dark:text-amber-400">
+          Offline of API niet bereikbaar. Je ziet geschatte/cache-koersen; vernieuw later voor actuele koersen.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
@@ -171,6 +179,6 @@ export default function ValutaPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   )
 }

@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/Input'
 import { ListTodo, Mail, Wallet, Settings, Cloud, Briefcase, Target, ChevronDown, ChevronUp, Calendar, Car } from 'lucide-react'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { StatCard } from '@/components/ui/StatCard'
+import { PageContainer } from '@/components/ui/PageContainer'
 
 function getMonthRange() {
   const now = new Date()
@@ -66,7 +67,10 @@ export default function DashboardPage() {
   const [quickListToday, setQuickListToday] = useState<{ id: string; amount: number; date: string }[]>([])
   const [weather, setWeather] = useState<{ temp?: number; icon?: string; max?: number; min?: number; rain?: number } | null>(null)
 
+  const [overviewError, setOverviewError] = useState<string | null>(null)
+
   const fetchOverview = useCallback(async (userId: string) => {
+    setOverviewError(null)
     const { first, last } = getMonthRange()
     const today = new Date()
     const todayStr = today.toISOString().slice(0, 10)
@@ -89,21 +93,36 @@ export default function DashboardPage() {
         .lte('entry_date', last),
     ])
 
+    if (tasksRes.error) {
+      toast(tasksRes.error.message || 'Taken laden mislukt', 'error')
+      setOverviewError(tasksRes.error.message || 'Taken laden mislukt')
+      setOpenTasks([])
+      setFocusTasks([])
+      return
+    }
+    if (financeRes.error) {
+      toast(financeRes.error.message || 'Financiën laden mislukt', 'error')
+      setIncomeMonth(0)
+      setExpenseMonth(0)
+    }
+
     const tasks = (tasksRes.data ?? []) as Task[]
     const todayCount = tasks.filter(
       (t) => isSameDay(t.due_date, today) || (t.created_at >= todayStr && t.created_at < tomorrowStr)
     ).length
     setOpenTasksToday(todayCount)
 
-    let inM = 0
-    let exM = 0
-    ;(financeRes.data ?? []).forEach((row: { type: string; amount: string }) => {
-      const n = Number(row.amount) || 0
-      if (row.type === 'income') inM += n
-      else exM += n
-    })
-    setIncomeMonth(inM)
-    setExpenseMonth(exM)
+    if (!financeRes.error) {
+      let inM = 0
+      let exM = 0
+      ;(financeRes.data ?? []).forEach((row: { type: string; amount: string }) => {
+        const n = Number(row.amount) || 0
+        if (row.type === 'income') inM += n
+        else exM += n
+      })
+      setIncomeMonth(inM)
+      setExpenseMonth(exM)
+    }
 
     const sortedForFocus = [...tasks].sort((a, b) => {
       const aDue = a.due_date ? new Date(a.due_date).getTime() : Infinity
@@ -113,11 +132,12 @@ export default function DashboardPage() {
     })
     setFocusTasks(sortedForFocus.slice(0, 3))
     setOpenTasks(tasks.slice(0, 8))
-  }, [])
+  }, [toast])
+
+  const DASHBOARD_FETCH_TIMEOUT_MS = 15000
 
   useEffect(() => {
     let mounted = true
-    const TIMEOUT_MS = 15000
     async function init() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -128,7 +148,7 @@ export default function DashboardPage() {
         if (!mounted) return
         setLoading(true)
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout')), TIMEOUT_MS)
+          setTimeout(() => reject(new Error('Timeout')), DASHBOARD_FETCH_TIMEOUT_MS)
         )
         await Promise.race([fetchOverview(user.id), timeoutPromise])
       } catch (err) {
@@ -244,7 +264,12 @@ export default function DashboardPage() {
           rain: d.daily?.precipitation_probability_max?.[0],
         })
       })
-      .catch(() => { if (mounted) setWeather({}) })
+      .catch(() => {
+        if (mounted) {
+          setWeather({})
+          toast('Weer niet beschikbaar', 'error')
+        }
+      })
     return () => { mounted = false }
   }, [])
 
@@ -315,9 +340,27 @@ export default function DashboardPage() {
     { href: '/dashboard/instellingen', label: 'Instellingen', icon: Settings, count: '' },
   ]
 
+  const handleRetryOverview = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      setLoading(true)
+      setOverviewError(null)
+      await fetchOverview(user.id)
+      setLoading(false)
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-6xl animate-fade-in space-y-6">
+    <PageContainer className="animate-fade-in space-y-6">
       <SectionHeader title="Dashboard" subtitle={welcomeText} />
+      {overviewError && (
+        <div className="rounded-[14px] border border-danger/30 bg-danger/10 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-danger">{overviewError}</p>
+          <Button variant="secondary" onClick={handleRetryOverview} disabled={loading}>
+            Opnieuw proberen
+          </Button>
+        </div>
+      )}
 
       <Card className="p-5" hoverLift={false}>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
@@ -557,7 +600,7 @@ export default function DashboardPage() {
           )}
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }
 

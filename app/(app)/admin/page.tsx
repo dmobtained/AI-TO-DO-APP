@@ -8,7 +8,9 @@ import { UserTable, type AdminUser } from '@/components/admin/UserTable'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import { Input } from '@/components/ui/Input'
+import { PageContainer } from '@/components/ui/PageContainer'
 import { Activity, Users, Settings } from 'lucide-react'
+import { useToast } from '@/context/ToastContext'
 
 type ActivityRow = {
   id: string
@@ -23,6 +25,7 @@ type ActivityRow = {
 
 export default function AdminPage() {
   const router = useRouter()
+  const toast = useToast()
   const { role, loading: authLoading } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,6 +34,12 @@ export default function AdminPage() {
   const [activityLoading, setActivityLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [actorFilter, setActorFilter] = useState('')
+  const [settings, setSettings] = useState<{ key: string; value: unknown }[]>([])
+  const [moduleLocks, setModuleLocks] = useState<{ slug: string; locked: boolean }[]>([])
+  const [settingsLoading, setSettingsLoading] = useState(false)
+  const [locksLoading, setLocksLoading] = useState(false)
+  const [updatingSetting, setUpdatingSetting] = useState<string | null>(null)
+  const [updatingLock, setUpdatingLock] = useState<string | null>(null)
 
   useEffect(() => {
     if (authLoading) return
@@ -81,6 +90,97 @@ export default function AdminPage() {
     fetchActivity()
   }, [role, fetchActivity])
 
+  const fetchSettings = useCallback(async () => {
+    setSettingsLoading(true)
+    try {
+      const res = await fetch('/api/admin/settings', { credentials: 'include' })
+      const data = await res.json().catch(() => ({}))
+      setSettings(Array.isArray(data.settings) ? data.settings : [])
+    } catch {
+      setSettings([])
+    } finally {
+      setSettingsLoading(false)
+    }
+  }, [])
+
+  const fetchModuleLocks = useCallback(async () => {
+    setLocksLoading(true)
+    try {
+      const res = await fetch('/api/admin/module-locks', { credentials: 'include' })
+      const data = await res.json().catch(() => ({}))
+      setModuleLocks(Array.isArray(data.locks) ? data.locks : [])
+    } catch {
+      setModuleLocks([])
+    } finally {
+      setLocksLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (role !== 'admin') return
+    fetchSettings()
+    fetchModuleLocks()
+  }, [role, fetchSettings, fetchModuleLocks])
+
+  const getSetting = (key: string) => settings.find((s) => s.key === key)?.value
+  const setSettingValue = (key: string, value: unknown) =>
+    setSettings((prev) => {
+      const rest = prev.filter((s) => s.key !== key)
+      return [...rest, { key, value }]
+    })
+
+  const handleSettingChange = useCallback(
+    async (key: string, checked: boolean) => {
+      setUpdatingSetting(key)
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ key, value: checked }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          toast(data.error ?? 'Opslaan mislukt', 'error')
+          return
+        }
+        setSettingValue(key, data.value === 'true' || data.value === true)
+        toast('Opgeslagen')
+      } catch {
+        toast('Opslaan mislukt', 'error')
+      } finally {
+        setUpdatingSetting(null)
+      }
+    },
+    [toast]
+  )
+
+  const handleLockChange = useCallback(
+    async (slug: string, locked: boolean) => {
+      setUpdatingLock(slug)
+      try {
+        const res = await fetch('/api/admin/module-locks', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ slug, locked }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          toast(data.error ?? 'Opslaan mislukt', 'error')
+          return
+        }
+        setModuleLocks((prev) => prev.map((l) => (l.slug === slug ? { slug, locked } : l)))
+        toast('Opgeslagen')
+      } catch {
+        toast('Opslaan mislukt', 'error')
+      } finally {
+        setUpdatingLock(null)
+      }
+    },
+    [toast]
+  )
+
   const handleRoleChange = useCallback(async (user: AdminUser) => {
     const nextRole = user.role === 'admin' ? 'user' : 'admin'
     setUpdatingId(user.id)
@@ -91,15 +191,18 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: nextRole }),
       })
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, role: user.role } : u)))
+        toast(data.error ?? 'Rol wijzigen mislukt', 'error')
       }
     } catch {
       setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, role: user.role } : u)))
+      toast('Rol wijzigen mislukt', 'error')
     } finally {
       setUpdatingId(null)
     }
-  }, [])
+  }, [toast])
 
   const filteredActivity = activity.filter((row) => {
     const q = search.toLowerCase()
@@ -127,7 +230,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <PageContainer className="max-w-5xl space-y-6">
       <h1 className="text-2xl font-semibold text-textPrimary">Admin</h1>
       <Tabs defaultValue="activity">
         <TabsList>
@@ -176,7 +279,7 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="system">
+        <TabsContent value="system" className="space-y-6">
           <Card className="p-6">
             <CardHeader className="p-0 pb-4">
               <CardTitle className="text-textPrimary">Systeeminfo</CardTitle>
@@ -185,12 +288,69 @@ export default function AdminPage() {
               <p><span className="font-medium text-textPrimary">Omgeving:</span> {typeof window !== 'undefined' ? (process.env.NODE_ENV ?? 'development') : '—'}</p>
               <p><span className="font-medium text-textPrimary">Supabase:</span> Geconfigureerd via NEXT_PUBLIC_SUPABASE_URL (controleer .env).</p>
               <p><span className="font-medium text-textPrimary">AI / Dagnotitie:</span> N8N_AI_HUB_WEBHOOK of NEXT_PUBLIC_N8N_AI_HUB_WEBHOOK in .env voor dagnotitie.</p>
-              <p className="pt-2 border-t border-border text-textSecondary">Geen extra systeeminstellingen in deze versie. Modules en locks beheer je via de database of bestaande flows.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="p-6">
+            <CardHeader className="p-0 pb-4">
+              <CardTitle className="text-textPrimary">App-instellingen</CardTitle>
+              <p className="text-sm text-textSecondary font-normal mt-1">Globale opties (alleen admin).</p>
+            </CardHeader>
+            <CardContent className="p-0 space-y-4">
+              {settingsLoading ? (
+                <p className="text-textSecondary text-sm">Laden…</p>
+              ) : (
+                <>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={getSetting('developer_mode_mail') === true || getSetting('developer_mode_mail') === 'true'}
+                      onChange={(e) => handleSettingChange('developer_mode_mail', e.target.checked)}
+                      disabled={updatingSetting === 'developer_mode_mail'}
+                      className="rounded border-border text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-textPrimary">E-mail inbox tonen voor niet-admin gebruikers</span>
+                  </label>
+                  <p className="text-xs text-textSecondary">Als uit: alleen admins zien de e-mailpagina. Zet aan om inbox voor iedereen te tonen.</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="p-6">
+            <CardHeader className="p-0 pb-4">
+              <CardTitle className="text-textPrimary">Module vergrendelingen</CardTitle>
+              <p className="text-sm text-textSecondary font-normal mt-1">Vergrendelde modules zijn voor gewone gebruikers alleen-lezen.</p>
+            </CardHeader>
+            <CardContent className="p-0">
+              {locksLoading ? (
+                <p className="text-textSecondary text-sm">Laden…</p>
+              ) : moduleLocks.length === 0 ? (
+                <p className="text-textSecondary text-sm">Geen module locks geconfigureerd. Voeg in de database rijen toe in <code className="bg-hover px-1 rounded">module_locks</code> (bijv. slug: notities).</p>
+              ) : (
+                <ul className="space-y-3">
+                  {moduleLocks.map((lock) => (
+                    <li key={lock.slug} className="flex items-center justify-between gap-4 py-2 border-b border-border last:border-0">
+                      <span className="font-medium text-textPrimary capitalize">{lock.slug}</span>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={lock.locked}
+                          onChange={(e) => handleLockChange(lock.slug, e.target.checked)}
+                          disabled={updatingLock === lock.slug}
+                          className="rounded border-border text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm text-textSecondary">Vergrendeld (alleen-lezen voor users)</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   )
 }
 

@@ -10,8 +10,9 @@ import { FeatureGuard } from '@/components/FeatureGuard'
 import type { Email } from '@/app/(app)/mail/types'
 import { InboxList } from '@/app/(app)/mail/components/InboxList'
 import { EmailDetail } from '@/app/(app)/mail/components/EmailDetail'
+import { PageContainer } from '@/components/ui/PageContainer'
 
-const AI_HUB_WEBHOOK = 'https://datadenkt.app.n8n.cloud/webhook/ai-hub'
+const AI_HUB_WEBHOOK = process.env.NEXT_PUBLIC_N8N_AI_REPLY_WEBHOOK || process.env.N8N_AI_HUB_WEBHOOK || 'https://datadenkt.app.n8n.cloud/webhook/ai-hub'
 
 export default function DashboardEmailPage() {
   const supabase = getSupabaseClient()
@@ -47,7 +48,7 @@ export default function DashboardEmailPage() {
           .select('value')
           .eq('key', 'developer_mode_mail')
           .maybeSingle()
-        if (mounted && settingsData?.value === true) {
+        if (mounted && (settingsData?.value === true || settingsData?.value === 'true')) {
           setDeveloperModeMail(true)
         }
       } catch {
@@ -110,24 +111,24 @@ export default function DashboardEmailPage() {
 
   return (
     <FeatureGuard feature="email_module">
-      <div className="mx-auto max-w-6xl">
-        <h1 className="text-xl font-semibold text-slate-900">E-mail</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Inbox en AI-antwoord</p>
+      <PageContainer>
+        <h1 className="text-xl font-semibold text-textPrimary">E-mail</h1>
+        <p className="text-sm text-textSecondary mt-0.5">Inbox en AI-antwoord</p>
 
         {isLocked && (
-          <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2 text-center text-sm text-amber-800">
+          <div className="mt-4 rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-2 text-center text-sm text-amber-700 dark:text-amber-400">
             Developer mode actief: inbox-interactie uitgeschakeld voor andere gebruikers.
           </div>
         )}
 
-        <div className="mt-6 flex gap-0 rounded-2xl border border-[#e5e7eb] bg-white shadow-sm overflow-hidden min-h-[560px]">
-          <aside className="w-80 shrink-0 border-r border-[#e5e7eb] flex flex-col min-w-0 bg-white">
-            <div className="shrink-0 px-4 py-3 border-b border-[#e5e7eb]">
-              <h2 className="text-sm font-semibold text-slate-900">Inbox</h2>
+        <div className="mt-6 flex gap-0 rounded-2xl border border-border bg-card shadow-sm overflow-hidden min-h-[560px]">
+          <aside className="w-80 shrink-0 border-r border-border flex flex-col min-w-0 bg-card">
+            <div className="shrink-0 px-4 py-3 border-b border-border">
+              <h2 className="text-sm font-semibold text-textPrimary">Inbox</h2>
             </div>
             {loading ? (
               <div className="flex-1 flex items-center justify-center p-4">
-                <svg className="animate-spin h-8 w-8 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-8 w-8 text-textSecondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
@@ -154,7 +155,7 @@ export default function DashboardEmailPage() {
             />
           </main>
         </div>
-      </div>
+      </PageContainer>
     </FeatureGuard>
   )
 }

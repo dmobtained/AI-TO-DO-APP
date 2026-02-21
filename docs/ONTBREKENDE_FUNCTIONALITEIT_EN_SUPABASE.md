@@ -25,9 +25,6 @@ Twee overzichten: (1) wat er in de app nog niet werkt of nog placeholder is, (2)
 ### Taken (/dashboard/taken)
 - **Taken CRUD:** Werkt met tabel `tasks`; als die ontbreekt, werkt niets.
 
-### Goud (/goud)
-- **Trendfilter:** In de UI staat letterlijk “(placeholder)” – nog geen echte filter of logica.
-
 ### Auto (/auto)
 - **Tankbeurten / Onderhoud / Reparaties:** Empty states met “Voeg een tankbeurt toe (placeholder)” – geen echte invoer of opslag (geen tabellen/API voor tankbeurten, onderhoud, reparaties).
 - **Aanschafwaarde / kosten per jaar:** Geen persistentie; moet nog gekoppeld worden aan data of uitgaven.

@@ -34,7 +34,7 @@ Dit document bundelt alle verbeterpunten die uit de code-analyse zijn gekomen. P
 
 | # | Waar | Probleem | Voorstel |
 |---|------|----------|----------|
-| 3.1 | Formulieren (agenda, valuta, taken, goud, etc.) | Labels niet gekoppeld aan inputs (`htmlFor` + `id` ontbreekt). | Bij elk veld: unieke `id` op het input en `htmlFor={id}` op het label. |
+| 3.1 | Formulieren (agenda, valuta, taken, etc.) | Labels niet gekoppeld aan inputs (`htmlFor` + `id` ontbreekt). | Bij elk veld: unieke `id` op het input en `htmlFor={id}` op het label. |
 | 3.2 | Agenda: verwijderknop | ~28×28px, onder de 44px-richtlijn voor touch. | Groter maken: min. 44×44px (bijv. `min-w-11 min-h-11`). |
 | 3.3 | Dashboard / Taken: "Afvinken" | Checkbox/knoppen ~20×20px. | Grotere klik-/tapzone (bijv. min 44×44px of extra padding). |
 | 3.4 | Instellingen: switch | Heeft `role="switch"` en `aria-checked`; moet met toetsenbord te bedienen zijn. | Focusable maken en met Enter/Space laten toggleen, of echte checkbox met styling. |

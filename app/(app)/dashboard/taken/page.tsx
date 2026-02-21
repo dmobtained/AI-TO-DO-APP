@@ -85,19 +85,19 @@ function isDueToday(iso: string | null): boolean {
 function priorityBadgeClass(priority: string | null): string {
   switch (priority) {
     case 'HIGH':
-      return 'bg-red-50 text-red-600 border-red-200'
+      return 'bg-danger/10 text-danger border-danger/30'
     case 'MEDIUM':
       return 'bg-amber-50 text-amber-600 border-amber-200'
     case 'LOW':
-      return 'bg-slate-100 text-slate-600 border-slate-200'
+      return 'bg-hover text-textSecondary border-border'
     default:
-      return 'bg-slate-100 text-slate-500 border-slate-200'
+      return 'bg-hover text-textSecondary border-border'
   }
 }
 
 function deadlineBadgeClass(dueDate: string | null): string {
-  if (!dueDate) return 'bg-slate-100 text-slate-500 border-slate-200'
-  return isOverdue(dueDate) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-100 text-slate-600 border-slate-200'
+  if (!dueDate) return 'bg-hover text-textSecondary border-border'
+  return isOverdue(dueDate) ? 'bg-danger/10 text-danger border-danger/30' : 'bg-hover text-textSecondary border-border'
 }
 
 export default function TakenPage() {
@@ -217,8 +217,8 @@ export default function TakenPage() {
   if (authLoading || !user) {
     return (
       <PageContainer>
-        <div className="h-8 w-48 rounded bg-slate-200 animate-pulse" />
-        <div className="mt-4 h-4 w-64 rounded bg-slate-200 animate-pulse" />
+        <div className="h-8 w-48 rounded bg-hover animate-pulse" />
+        <div className="mt-4 h-4 w-64 rounded bg-hover animate-pulse" />
       </PageContainer>
     )
   }
@@ -247,41 +247,41 @@ export default function TakenPage() {
           <CardContent className="p-0">
             <form onSubmit={handleAdd} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Titel *</label>
+                <label className="block text-sm font-medium text-textPrimary mb-1.5">Titel *</label>
                 <Input type="text" value={form.title} onChange={(e) => updateForm('title', e.target.value)} placeholder="Taak titel" required disabled={adding} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Details</label>
-                <textarea value={form.details} onChange={(e) => updateForm('details', e.target.value)} placeholder="Optioneel" rows={3} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20 resize-y" disabled={adding} />
+                <label className="block text-sm font-medium text-textPrimary mb-1.5">Details</label>
+                <textarea value={form.details} onChange={(e) => updateForm('details', e.target.value)} placeholder="Optioneel" rows={3} className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-textPrimary placeholder:text-textSecondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y" disabled={adding} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Prioriteit</label>
-                  <select value={form.priority} onChange={(e) => updateForm('priority', e.target.value)} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20" disabled={adding}>
+                  <label className="block text-sm font-medium text-textPrimary mb-1.5">Prioriteit</label>
+                  <select value={form.priority} onChange={(e) => updateForm('priority', e.target.value)} className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-textPrimary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" disabled={adding}>
                     {PRIORITY_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Deadline</label>
+                  <label className="block text-sm font-medium text-textPrimary mb-1.5">Deadline</label>
                   <Input type="date" value={form.due_date} onChange={(e) => updateForm('due_date', e.target.value)} disabled={adding} />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Context</label>
-                  <select value={form.context} onChange={(e) => updateForm('context', e.target.value)} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20" disabled={adding}>
+                  <label className="block text-sm font-medium text-textPrimary mb-1.5">Context</label>
+                  <select value={form.context} onChange={(e) => updateForm('context', e.target.value)} className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-textPrimary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" disabled={adding}>
                     <option value="">—</option>
                     {CONTEXT_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Geschatte tijd (min)</label>
+                  <label className="block text-sm font-medium text-textPrimary mb-1.5">Geschatte tijd (min)</label>
                   <Input type="number" min={1} value={form.estimated_time} onChange={(e) => updateForm('estimated_time', e.target.value)} placeholder="bijv. 30" disabled={adding} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Energie</label>
-                <select value={form.energy_level} onChange={(e) => updateForm('energy_level', e.target.value)} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20 sm:max-w-[12rem]" disabled={adding}>
+                <label className="block text-sm font-medium text-textPrimary mb-1.5">Energie</label>
+                <select value={form.energy_level} onChange={(e) => updateForm('energy_level', e.target.value)} className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-textPrimary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:max-w-[12rem]" disabled={adding}>
                   {ENERGY_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                 </select>
               </div>
@@ -296,15 +296,15 @@ export default function TakenPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2 overflow-hidden">
-          <CardHeader className="border-b border-[#e5e7eb]">
-            <CardTitle className="text-slate-900">Alle taken</CardTitle>
+          <CardHeader className="border-b border-border">
+            <CardTitle className="text-textPrimary">Alle taken</CardTitle>
           </CardHeader>
           {loading ? (
             <ul className="divide-y divide-[#e5e7eb]">
               {[1, 2, 3].map((i) => (
                 <li key={i} className="px-6 py-4">
-                  <div className="h-5 w-3/4 rounded bg-slate-100 animate-pulse" />
-                  <div className="mt-2 h-4 w-1/2 rounded bg-slate-100 animate-pulse" />
+                  <div className="h-5 w-3/4 rounded bg-hover animate-pulse" />
+                  <div className="mt-2 h-4 w-1/2 rounded bg-hover animate-pulse" />
                 </li>
               ))}
             </ul>
@@ -312,7 +312,7 @@ export default function TakenPage() {
             <ul className="divide-y divide-[#e5e7eb]">
               {tasks.length === 0 ? (
                 <li className="px-6 py-12 text-center">
-                  <p className="text-sm text-slate-500">Geen taken. Klik op &quot;Nieuwe taak&quot; om er een toe te voegen.</p>
+                  <p className="text-sm text-textSecondary">Geen taken. Klik op &quot;Nieuwe taak&quot; om er een toe te voegen.</p>
                 </li>
               ) : (
                 tasks.map((task) => {
@@ -320,14 +320,14 @@ export default function TakenPage() {
                   return (
                     <li
                       key={task.id}
-                      className={`px-6 py-4 transition-all duration-200 hover:bg-slate-50/80 border-l-4 ${overdue ? 'border-red-500 bg-red-50/30' : 'border-[#2563eb]'}`}
+                      className={`px-6 py-4 transition-all duration-200 hover:bg-hover border-l-4 ${overdue ? 'border-danger bg-danger/10' : 'border-primary'}`}
                     >
                       <div className="flex items-start gap-4">
                         <button
                           type="button"
                           onClick={() => handleToggle(task)}
-                          className={`shrink-0 mt-0.5 flex items-center justify-center w-5 h-5 rounded-md border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-2 ${
-                            task.status === 'DONE' ? 'border-[#2563eb] bg-[#2563eb]' : 'border-slate-300 bg-white hover:border-[#2563eb]'
+                          className={`shrink-0 mt-0.5 flex items-center justify-center min-w-[44px] min-h-[44px] w-5 h-5 rounded-md border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                            task.status === 'DONE' ? 'border-primary bg-primary' : 'border-border bg-card hover:border-primary'
                           }`}
                           aria-label={task.status === 'DONE' ? 'Open zetten' : 'Afvinken'}
                         >
@@ -338,10 +338,10 @@ export default function TakenPage() {
                           )}
                         </button>
                         <div className="flex-1 min-w-0">
-                          <span className={task.status === 'DONE' ? 'text-slate-500 line-through font-semibold' : 'text-slate-900 font-semibold'}>
+                          <span className={task.status === 'DONE' ? 'text-textSecondary line-through font-semibold' : 'text-textPrimary font-semibold'}>
                             {task.title}
                           </span>
-                          <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-slate-500">
+                          <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-textSecondary">
                             {task.priority && (
                               <span className={`inline-flex rounded-lg border px-2 py-0.5 text-xs font-medium ${priorityBadgeClass(task.priority)}`}>
                                 {task.priority === 'HIGH' ? 'Hoog' : task.priority === 'MEDIUM' ? 'Normaal' : 'Laag'}
@@ -356,7 +356,7 @@ export default function TakenPage() {
                             {task.estimated_time != null && task.estimated_time > 0 && <span>~{task.estimated_time} min</span>}
                           </div>
                         </div>
-                        <button type="button" onClick={() => handleDelete(task.id)} className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors" aria-label="Verwijderen">
+                        <button type="button" onClick={() => handleDelete(task.id)} className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-textSecondary hover:bg-danger/10 hover:text-danger transition-colors" aria-label="Verwijderen">
                           Verwijderen
                         </button>
                       </div>
@@ -369,9 +369,9 @@ export default function TakenPage() {
         </Card>
 
         <Card className="p-6">
-          <h2 className="text-sm font-semibold text-slate-900 mb-2">Snelle links</h2>
-          <Link href="/dashboard" className="block text-sm text-[#2563eb] hover:underline mb-2">← Dashboard</Link>
-          <Link href="/dashboard/financien" className="block text-sm text-[#2563eb] hover:underline">Financiën →</Link>
+          <h2 className="text-sm font-semibold text-textPrimary mb-2">Snelle links</h2>
+          <Link href="/dashboard" className="block text-sm text-primary hover:underline mb-2">← Dashboard</Link>
+          <Link href="/dashboard/financien" className="block text-sm text-primary hover:underline">Financiën →</Link>
         </Card>
       </div>
     </PageContainer>

@@ -16,26 +16,19 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { CreditCard, Plus, Trash2, Sparkles } from 'lucide-react'
 import { getMonthRange } from '../components/types'
 
-// ========== DUMMY DATA (voor nu) ==========
-type DummyDebt = {
+type Debt = {
   id: string
+  user_id: string
   name: string
   original_amount: number
   current_balance: number
   interest_rate: number | null
   monthly_payment: number
+  start_date: string | null
+  created_at: string
 }
 
-const DUMMY_DEBTS: DummyDebt[] = [
-  { id: '1', name: 'ABN Studielening', original_amount: 12000, current_balance: 10500, interest_rate: 2.56, monthly_payment: 180 },
-  { id: '2', name: 'Creditcard', original_amount: 3200, current_balance: 2800, interest_rate: 14.9, monthly_payment: 120 },
-  { id: '3', name: 'Familielening', original_amount: 5000, current_balance: 4500, interest_rate: 0, monthly_payment: 100 },
-]
-
-// Scenario-uitkomsten (frontend dummy)
-const DUMMY_SCENARIO_CURRENT = { endDate: '15-03-2028', totalInterest: 2840, months: 38 }
-const DUMMY_SCENARIO_EXTRA_100 = { endDate: '22-11-2027', totalInterest: 2480, monthsSaved: 4, interestSaved: 360 }
-const DUMMY_AI_PLACEHOLDER = { endDate: '—', totalInterest: '—', monthsSaved: '—', note: 'Wordt gevuld via AI' }
+// Geen dummy-cijfers meer: scenario's alleen op echte data of duidelijke lege staat
 
 type AIAnalysisResponse = {
   actions?: string[]
@@ -57,7 +50,8 @@ export default function FinancienSchuldenPage() {
   const router = useRouter()
   const toast = useToast()
   const { user, loading: authLoading } = useDashboardUser()
-  const [debts, setDebts] = useState<DummyDebt[]>(DUMMY_DEBTS)
+  const [debts, setDebts] = useState<Debt[]>([])
+  const [debtsLoading, setDebtsLoading] = useState(true)
   const [income, setIncome] = useState<number>(0)
   const [fixedExpenses, setFixedExpenses] = useState<number>(0)
   const [variableExpenses, setVariableExpenses] = useState<number>(0)
@@ -74,6 +68,27 @@ export default function FinancienSchuldenPage() {
     interest_rate: '',
     monthly_payment: '',
   })
+
+  const fetchDebts = useCallback(async () => {
+    if (!user?.id) return
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase
+      .from('debts')
+      .select('id, user_id, name, total_amount, current_balance, interest_rate, monthly_payment, start_date, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    if (error) {
+      toast(error.message || 'Schulden laden mislukt', 'error')
+      setDebts([])
+      return
+    }
+    const rows = (data ?? []).map((r: { total_amount?: string | number; current_balance?: string | number | null; [k: string]: unknown }) => {
+      const orig = Number(r.total_amount) || 0
+      const curr = r.current_balance != null ? Number(r.current_balance) : orig
+      return { ...r, original_amount: orig, current_balance: curr } as Debt
+    })
+    setDebts(rows)
+  }, [user?.id, toast])
 
   const fetchCashflow = useCallback(async () => {
     if (!user?.id) return
@@ -108,8 +123,12 @@ export default function FinancienSchuldenPage() {
   useEffect(() => {
     if (authLoading || !user) return
     setCashflowLoading(true)
-    fetchCashflow().finally(() => setCashflowLoading(false))
-  }, [user, authLoading, fetchCashflow])
+    setDebtsLoading(true)
+    Promise.all([fetchDebts(), fetchCashflow()]).finally(() => {
+      setCashflowLoading(false)
+      setDebtsLoading(false)
+    })
+  }, [user, authLoading, fetchDebts, fetchCashflow])
 
   // Berekeningen (frontend)
   const totalStart = debts.reduce((s, d) => s + d.original_amount, 0)
@@ -126,8 +145,18 @@ export default function FinancienSchuldenPage() {
   const avgMonthlyPayment =
     debts.length > 0 ? debts.reduce((s, d) => s + d.monthly_payment, 0) / debts.length : 0
 
-  const handleAdd = (e: React.FormEvent) => {
+  // Scenario 2: +€100 extra per maand (alleen bij echte schulden)
+  const EXTRA_PER_MONTH = 100
+  const scenario2Monthly = monthlyPaymentTotal + EXTRA_PER_MONTH
+  const scenario2Months = scenario2Monthly > 0 ? totalRemaining / scenario2Monthly : 0
+  const scenario2EndDate = new Date()
+  scenario2EndDate.setMonth(scenario2EndDate.getMonth() + Math.ceil(scenario2Months))
+  const scenario2MonthsSaved = debts.length > 0 ? Math.max(0, Math.ceil(estimatedMonths) - Math.ceil(scenario2Months)) : 0
+  const scenario2InterestSaved = debts.length > 0 ? Math.round((estimatedMonths - scenario2Months) * (totalRemaining * 0.02) / Math.max(1, Math.ceil(estimatedMonths))) : 0
+
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user?.id) return
     const name = form.name.trim()
     const original = parseFloat(form.original_amount.replace(',', '.'))
     const current = parseFloat(form.current_balance.replace(',', '.'))
@@ -138,24 +167,40 @@ export default function FinancienSchuldenPage() {
       return
     }
     setAdding(true)
-    setDebts((prev) => [
-      ...prev,
-      {
-        id: String(Date.now()),
-        name,
-        original_amount: original,
-        current_balance: current,
-        interest_rate: Number.isNaN(rate!) || rate == null ? null : rate,
-        monthly_payment: monthly,
-      },
-    ])
+    const supabase = getSupabaseClient()
+    const { data: inserted, error } = await supabase.from('debts').insert({
+      user_id: user.id,
+      name,
+      total_amount: original,
+      current_balance: current,
+      interest_rate: rate != null && !Number.isNaN(rate) ? rate : null,
+      monthly_payment: monthly,
+    }).select('id, user_id, name, total_amount, current_balance, interest_rate, monthly_payment, start_date, created_at').single()
+    setAdding(false)
+    if (error) {
+      toast(error.message || 'Toevoegen mislukt', 'error')
+      return
+    }
     setForm({ name: '', original_amount: '', current_balance: '', interest_rate: '', monthly_payment: '' })
     setShowForm(false)
-    setAdding(false)
-    toast('Schuld toegevoegd (dummy)')
+    toast('Schuld toegevoegd')
+    if (inserted) {
+      const row = inserted as { total_amount?: string | number; current_balance?: string | number | null; [k: string]: unknown }
+      const orig = Number(row.total_amount) || 0
+      const curr = row.current_balance != null ? Number(row.current_balance) : orig
+      setDebts((prev) => [{ ...row, original_amount: orig, current_balance: curr } as Debt, ...prev])
+    }
+    fetchDebts()
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    if (!user?.id) return
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.from('debts').delete().eq('id', id).eq('user_id', user.id)
+    if (error) {
+      toast(error.message || 'Verwijderen mislukt', 'error')
+      return
+    }
     setDebts((prev) => prev.filter((d) => d.id !== id))
     if (expandedId === id) setExpandedId(null)
     toast('Verwijderd')
@@ -337,20 +382,38 @@ export default function FinancienSchuldenPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
               <div className="rounded-[10px] bg-hover border border-border p-3 sm:p-4 min-h-[44px]">
                 <p className="text-xs font-medium text-textSecondary uppercase tracking-wider mb-1 sm:mb-2 break-words">Scenario 1 – Huidig tempo</p>
-                <p className="text-textPrimary font-medium">Einddatum {DUMMY_SCENARIO_CURRENT.endDate}</p>
-                <p className="text-sm text-textSecondary mt-1">Totale rente €{DUMMY_SCENARIO_CURRENT.totalInterest.toLocaleString('nl-NL')}</p>
-                <p className="text-sm text-textSecondary">{DUMMY_SCENARIO_CURRENT.months} maanden</p>
+                {debts.length ? (
+                  <>
+                    <p className="text-textPrimary font-medium">Einddatum {formatDateDDMMYYYY(estimatedEndDate)}</p>
+                    <p className="text-sm text-textSecondary mt-1">Totale rente (schatting) €{Math.round(totalRemaining * 0.02).toLocaleString('nl-NL')}</p>
+                    <p className="text-sm text-textSecondary">{Math.ceil(estimatedMonths)} maanden</p>
+                  </>
+                ) : (
+                  <p className="text-textSecondary text-sm">Voeg schulden toe om dit scenario te zien.</p>
+                )}
               </div>
               <div className="rounded-[10px] bg-hover border border-border p-3 sm:p-4 min-h-[44px]">
                 <p className="text-xs font-medium text-textSecondary uppercase tracking-wider mb-1 sm:mb-2 break-words">Scenario 2 – + €100 extra per maand</p>
-                <p className="text-textPrimary font-medium">Nieuwe einddatum {DUMMY_SCENARIO_EXTRA_100.endDate}</p>
-                <p className="text-sm text-textSecondary mt-1">Totale rente €{DUMMY_SCENARIO_EXTRA_100.totalInterest.toLocaleString('nl-NL')}</p>
-                <p className="text-sm text-success">{DUMMY_SCENARIO_EXTRA_100.monthsSaved} maanden sneller · €{DUMMY_SCENARIO_EXTRA_100.interestSaved} rente bespaard</p>
+                {debts.length ? (
+                  <>
+                    <p className="text-textPrimary font-medium">Nieuwe einddatum {formatDateDDMMYYYY(scenario2EndDate)}</p>
+                    <p className="text-sm text-textSecondary mt-1">Totale rente (schatting) €{Math.round(totalRemaining * 0.02).toLocaleString('nl-NL')}</p>
+                    <p className="text-sm text-success">{scenario2MonthsSaved} maanden sneller · €{scenario2InterestSaved} rente bespaard</p>
+                  </>
+                ) : (
+                  <p className="text-textSecondary text-sm">Voeg schulden toe om dit scenario te zien.</p>
+                )}
               </div>
               <div className="rounded-[10px] bg-hover border border-border p-3 sm:p-4 min-h-[44px]">
                 <p className="text-xs font-medium text-textSecondary uppercase tracking-wider mb-1 sm:mb-2 break-words">Scenario 3 – Geoptimaliseerd (AI)</p>
-                <p className="text-textPrimary font-medium">Einddatum {DUMMY_AI_PLACEHOLDER.endDate}</p>
-                <p className="text-sm text-textSecondary">{DUMMY_AI_PLACEHOLDER.note}</p>
+                {aiResponse ? (
+                  <>
+                    {aiResponse.newEndDate && <p className="text-textPrimary font-medium">Einddatum {aiResponse.newEndDate}</p>}
+                    <p className="text-sm text-textSecondary">{aiResponse.error ? aiResponse.error : 'Zie AI Analyse hieronder.'}</p>
+                  </>
+                ) : (
+                  <p className="text-textSecondary text-sm">Wordt gevuld via AI (klik op de knop hieronder).</p>
+                )}
               </div>
             </div>
             <Button onClick={handleAiOptimization} disabled={aiLoading} className="w-full sm:w-auto min-h-[44px]">
@@ -395,7 +458,9 @@ export default function FinancienSchuldenPage() {
         {/* 4️⃣ SCHULDEN – mobiel: kaarten, desktop: tabel */}
         <div className="mt-6 sm:mt-8">
           <h2 className="text-base sm:text-lg font-semibold text-textPrimary mb-3 sm:mb-4">Schulden</h2>
-          {debts.length === 0 ? (
+          {debtsLoading ? (
+            <div className="h-32 rounded-[14px] bg-hover animate-pulse" />
+          ) : debts.length === 0 ? (
             <EmptyState
               icon={CreditCard}
               title="Geen schulden"
@@ -520,7 +585,7 @@ export default function FinancienSchuldenPage() {
                             <tr>
                               <td colSpan={10} className="px-4 lg:px-6 py-3 sm:py-4 bg-hover border-b border-border">
                                 <div className="text-sm text-textSecondary">
-                                  Betalingshistorie en simulatie komen hier (dummy).
+                                  Betalingshistorie kan later worden gekoppeld.
                                   <Button variant="ghost" className="ml-2 text-danger hover:bg-danger/10" onClick={() => handleDelete(d.id)}>
                                     <Trash2 className="h-4 w-4 mr-1" /> Verwijderen
                                   </Button>

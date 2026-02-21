@@ -128,12 +128,14 @@ function setCachedRates(base: string, rates: RatesMap): void {
   }
 }
 
+export type RatesSource = 'api' | 'cache' | 'mock'
+
 /**
- * Fetch live rates for base currency. Returns mock if API fails.
+ * Fetch live rates for base currency. Returns cache or mock if API fails.
  */
-export async function fetchRates(base: string): Promise<{ rates: RatesMap; updatedAt: number }> {
+export async function fetchRates(base: string): Promise<{ rates: RatesMap; updatedAt: number; source: RatesSource }> {
   const cached = getCachedRates(base)
-  if (cached) return { rates: cached, updatedAt: Date.now() }
+  if (cached) return { rates: cached, updatedAt: Date.now(), source: 'cache' }
 
   try {
     const res = await fetch(
@@ -146,7 +148,7 @@ export async function fetchRates(base: string): Promise<{ rates: RatesMap; updat
       Object.assign(rates, data.rates)
     }
     setCachedRates(base, rates)
-    return { rates, updatedAt: Date.now() }
+    return { rates, updatedAt: Date.now(), source: 'api' }
   } catch {
     const rates: RatesMap = {}
     currencyList.forEach((c) => {
@@ -156,7 +158,7 @@ export async function fetchRates(base: string): Promise<{ rates: RatesMap; updat
       else rates[c.code] = MOCK_RATES[c.code] ?? 1
     })
     if (!rates[base]) rates[base] = 1
-    return { rates, updatedAt: Date.now() }
+    return { rates, updatedAt: Date.now(), source: 'mock' }
   }
 }
 

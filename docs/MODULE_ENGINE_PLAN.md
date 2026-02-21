@@ -162,7 +162,7 @@ Per module-route (e.g. POST /api/notes):
 
 ## Volgende modules (na Notities)
 
-Zelfde patroon: migratie → API (zod + access + audit) → pagina met ModulePageLayout + specifieke forms/tables. Volgorde: Auto, Vergaderingen, Valuta, Business, Persoonlijke info, Goud, Dashboard-widgets, Financiën sidebar nested.
+Zelfde patroon: migratie → API (zod + access + audit) → pagina met ModulePageLayout + specifieke forms/tables. Volgorde: Auto, Vergaderingen, Valuta, Business, Persoonlijke info, Dashboard-widgets, Financiën sidebar nested.
 
 ---
 

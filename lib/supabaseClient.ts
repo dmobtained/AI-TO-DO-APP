@@ -40,6 +40,11 @@ export function getSupabaseClient(): SupabaseClient {
     return _client
   }
   if (_client !== null && _clientUrl === wantUrl) return _client
+  if (wantUrl === PLACEHOLDER_URL && typeof console !== 'undefined') {
+    console.warn(
+      '[Supabase] NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY ontbreken of zijn niet geladen. Data wordt niet opgeslagen. Zet .env.local en herstart de dev server.'
+    )
+  }
   _client = createSupabaseClient(wantUrl, wantKey)
   _clientUrl = wantUrl
   return _client

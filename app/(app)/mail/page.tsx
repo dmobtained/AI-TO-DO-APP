@@ -10,7 +10,7 @@ import type { Email } from './types'
 import { InboxList } from './components/InboxList'
 import { EmailDetail } from './components/EmailDetail'
 
-const AI_HUB_WEBHOOK = 'https://datadenkt.app.n8n.cloud/webhook/ai-hub'
+const AI_HUB_WEBHOOK = process.env.NEXT_PUBLIC_N8N_AI_REPLY_WEBHOOK || process.env.N8N_AI_HUB_WEBHOOK || 'https://datadenkt.app.n8n.cloud/webhook/ai-hub'
 
 export default function MailPage() {
   const supabase = getSupabaseClient()
@@ -58,7 +58,7 @@ export default function MailPage() {
           .select('value')
           .eq('key', 'developer_mode_mail')
           .maybeSingle()
-        if (mounted && settingsData?.value === true) {
+        if (mounted && (settingsData?.value === true || settingsData?.value === 'true')) {
           setDeveloperModeMail(true)
         }
       } catch {

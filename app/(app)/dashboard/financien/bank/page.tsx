@@ -11,6 +11,7 @@ import { FeatureGuard } from '@/components/FeatureGuard'
 import type { FinanceEntry } from '../components/types'
 import { getMonthRange } from '../components/types'
 import { BankzaldoSection } from '../components/BankzaldoSection'
+import { PageContainer } from '@/components/ui/PageContainer'
 
 export default function FinancienBankPage() {
   const supabase = getSupabaseClient()
@@ -116,20 +117,20 @@ export default function FinancienBankPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="mx-auto max-w-4xl">
-        <div className="h-8 w-48 rounded bg-slate-200 animate-pulse" />
-      </div>
+      <PageContainer>
+        <div className="h-8 w-48 rounded bg-hover animate-pulse" />
+      </PageContainer>
     )
   }
 
   return (
     <FeatureGuard feature="finance_module">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="text-2xl font-semibold text-slate-900">Bank saldo</h1>
-        <p className="text-slate-500 text-sm mt-0.5">Inkomsten en uitgaven deze maand</p>
+      <PageContainer>
+        <h1 className="text-2xl font-semibold text-textPrimary">Bank saldo</h1>
+        <p className="text-textSecondary text-sm mt-0.5">Inkomsten en uitgaven deze maand</p>
 
         {error && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mt-4 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
             {error}
           </div>
         )}
@@ -152,7 +153,7 @@ export default function FinancienBankPage() {
             isAdmin={isAdmin ?? false}
           />
         </div>
-      </div>
+      </PageContainer>
     </FeatureGuard>
   )
 }

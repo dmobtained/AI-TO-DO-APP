@@ -51,7 +51,6 @@ Alle onderstaande routes zitten achter login + middleware.
 | **/dashboard/financien/lasten** | Vaste lasten. |
 | **/dashboard/financien/beleggen** | Beleggen. |
 | **/dashboard/financien/belasting** | Belasting. |
-| **/goud** | Goud Analyse Engine: inputs (balance, richting long/short, entry, stop loss), live outputs (risk, SL-distance, position size, take profit, R:R), VALID/INVALID badge, trendfilter-placeholder. Risk per trade 1%. |
 | **/auto** | Auto: 4 stat cards (kosten/jaar, per km, aanschaf, waarde), tabs Tankbeurten / Onderhoud / Reparaties met empty states. |
 | **/business** | Business pipeline: 3 stat cards (leads, conversie, deals), 3 kolommen (Lead, Gesprek, Deal) met empty states. |
 | **/notities** | Notities: grid notitiekaarten, “Nieuwe notitie”-knop, detail-placeholder. |

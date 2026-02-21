@@ -12,7 +12,6 @@ export type ModuleSlug =
   | 'valuta'
   | 'business'
   | 'persoonlijke_info'
-  | 'goud'
   | 'financien'
   | 'dashboard'
 
