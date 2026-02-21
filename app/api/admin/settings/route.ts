@@ -20,11 +20,11 @@ async function requireAdmin() {
 export async function GET() {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json(auth.body, { status: auth.status })
-  const { data, err } = await supabaseAdmin!
+  const { data, error: fetchError } = await supabaseAdmin!
     .from('settings')
     .select('key, value')
     .is('user_id', null)
-  if (err) return NextResponse.json({ error: err.message }, { status: 500 })
+  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 })
   return NextResponse.json({ settings: data ?? [] })
 }
 
