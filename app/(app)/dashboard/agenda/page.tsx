@@ -502,7 +502,7 @@ export default function AgendaPage() {
           </div>
           <div className="grid grid-cols-7">
             {Array.from({ length: startPadding }, (_, i) => (
-              <div key={`pad-${i}`} className="min-h-[90px] border-b border-r border-border bg-hover/30" />
+              <div key={`pad-${i}`} className="min-h-[72px] sm:min-h-[90px] border-b border-r border-border bg-hover/30" />
             ))}
             {monthDays.map((day) => {
               const key = formatDayKey(day)
@@ -514,7 +514,7 @@ export default function AgendaPage() {
               return (
                 <div
                   key={key}
-                  className={`min-h-[90px] border-b border-r border-border p-1.5 last:border-r-0 ${
+                  className={`min-h-[72px] sm:min-h-[90px] border-b border-r border-border p-1.5 last:border-r-0 ${
                     isToday ? 'bg-primarySoft/50' : 'bg-card'
                   }`}
                 >
@@ -550,7 +550,7 @@ export default function AgendaPage() {
                           <button
                             type="button"
                             onClick={() => handleDeleteEvent(ev.id)}
-                            className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-white/20 shrink-0"
+                            className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1 min-w-[28px] min-h-[28px] rounded hover:bg-white/20 shrink-0 touch-manipulation"
                             aria-label="Verwijderen"
                           >
                             <X className="h-3 w-3" />

@@ -39,3 +39,4 @@ CREATE POLICY "agenda_events_own"
 COMMENT ON TABLE public.agenda_events IS 'Agenda-activiteiten en werkrooster; begindatum + optionele einddatum + kleur.';
 COMMENT ON COLUMN public.agenda_events.event_date IS 'Begindatum.';
 COMMENT ON COLUMN public.agenda_events.event_date_end IS 'Einddatum (optioneel); voor periodes zoals vakantie of werkrooster.';
+
