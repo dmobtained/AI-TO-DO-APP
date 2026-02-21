@@ -79,7 +79,18 @@ Next.js luistert in productie op `process.env.PORT`. Railway zet `PORT` automati
 
 ---
 
-### 5. Build
+### 5. Supabase Auth: Site URL en Redirect URLs (belangrijk voor live)
+Als inloggen op Railway werkt maar **data slaat niet op** of de **pagina blijft eindeloos laden**, controleer in Supabase:
+
+1. **Supabase Dashboard → Authentication → URL Configuration**
+2. **Site URL:** zet op je live URL, bijv. `https://jouw-app.up.railway.app` (geen trailing slash).
+3. **Redirect URLs:** voeg dezelfde URL toe (en eventueel `https://jouw-app.up.railway.app/**`). Zonder deze URL zet Supabase geen sessie-cookies voor je Railway-domein, waardoor de app geen echte sessie heeft en opslaan/RLS faalt of de server geen user ziet.
+
+Na aanpassing: gebruikers opnieuw laten inloggen op de live URL.
+
+---
+
+### 6. Build
 - **Build command:** `npm run build` (nu: `prisma generate && next build`).
 - **Start command:** `npm start` (of leeg laten; default is `npm start`).
 

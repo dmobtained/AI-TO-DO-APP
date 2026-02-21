@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 
 const LOGIN_TIMEOUT_MS = 20000; // 20 sec voor trage verbindingen
-const SESSION_CHECK_TIMEOUT_MS = 5000;
+const SESSION_CHECK_TIMEOUT_MS = 15000; // 15 sec – Railway cold start / Supabase kan traag zijn
 
 export default function LoginPage() {
   const router = useRouter();

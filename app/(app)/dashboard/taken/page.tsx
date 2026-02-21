@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useDashboardUser } from '@/hooks/useDashboardUser'
 import { useModuleLock } from '@/hooks/useModuleLock'
 import { useToast } from '@/context/ToastContext'
@@ -103,7 +102,6 @@ function deadlineBadgeClass(dueDate: string | null): string {
 }
 
 export default function TakenPage() {
-  const supabase = getSupabaseClient()
   const router = useRouter()
   const toast = useToast()
   const [tasks, setTasks] = useState<Task[]>([])
@@ -116,21 +114,16 @@ export default function TakenPage() {
 
   const fetchTasks = useCallback(async () => {
     try {
-      const { data: { user: u } } = await supabase.auth.getUser()
-      if (!u) {
+      const res = await fetch('/api/tasks', { credentials: 'include' })
+      if (res.status === 401) {
         router.replace('/')
         return
       }
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('id, title, status, created_at, user_id, details, priority, due_date, tags, context, estimated_time, energy_level')
-        .eq('user_id', u.id)
-        .order('created_at', { ascending: false })
-      if (error) {
+      if (!res.ok) {
         setTasks([])
         return
       }
-      const fromServer = (data ?? []) as Task[]
+      const fromServer = (await res.json()) as Task[]
       setTasks((prev) => {
         const serverIds = new Set(fromServer.map((t) => t.id))
         const keepFromPrev = prev.filter((t) => t.id.startsWith('pending-') || !serverIds.has(t.id))
@@ -158,9 +151,12 @@ export default function TakenPage() {
     e.preventDefault()
     const title = form.title.trim()
     if (!title || !user) return
-    const payload = {
+    const pendingId = `pending-${Date.now()}`
+    const optimisticTask: Task = {
+      id: pendingId,
       title,
-        status: 'OPEN' as TaskStatus,
+      status: 'OPEN',
+      created_at: new Date().toISOString(),
       user_id: user.id,
       details: form.details.trim() || null,
       priority: form.priority,
@@ -170,43 +166,39 @@ export default function TakenPage() {
       estimated_time: form.estimated_time ? parseInt(form.estimated_time, 10) : null,
       energy_level: form.energy_level,
     }
-    const pendingId = `pending-${Date.now()}`
-    const optimisticTask: Task = {
-      id: pendingId,
-      title: payload.title,
-      status: 'OPEN',
-      created_at: new Date().toISOString(),
-      user_id: user.id,
-      details: payload.details,
-      priority: payload.priority,
-      due_date: payload.due_date,
-      tags: [],
-      context: payload.context,
-      estimated_time: payload.estimated_time,
-      energy_level: payload.energy_level,
-    }
     setTasks((prev) => [optimisticTask, ...prev])
     setForm(emptyForm)
     setShowForm(false)
     setAdding(true)
     try {
-      const INSERT_TIMEOUT_MS = 15000
-      const insertPromise = supabase.from('tasks').insert(payload).select().single()
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout')), INSERT_TIMEOUT_MS)
-      )
-      const result = await Promise.race([insertPromise, timeoutPromise]) as { data: Task | null; error: { message: string } | null }
-      const { data, error } = result
-      if (error || !data) {
+      const body = {
+        title,
+        details: form.details.trim() || null,
+        priority: form.priority,
+        due_date: form.due_date ? new Date(form.due_date).toISOString() : null,
+        tags: [] as string[],
+        context: form.context || null,
+        estimated_time: form.estimated_time ? parseInt(form.estimated_time, 10) : null,
+        energy_level: form.energy_level,
+      }
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
         setTasks((prev) => prev.filter((t) => t.id !== pendingId))
-        toast(error?.message ?? 'Kon taak niet toevoegen.', 'error')
+        toast((data?.error as string) ?? 'Kon taak niet toevoegen.', 'error')
         return
       }
-      setTasks((prev) => prev.map((t) => (t.id === pendingId ? data : t)))
+      const task = data as Task
+      setTasks((prev) => prev.map((t) => (t.id === pendingId ? task : t)))
       toast('Taak toegevoegd')
     } catch (err) {
       setTasks((prev) => prev.filter((t) => t.id !== pendingId))
-      toast(err instanceof Error && err.message === 'Timeout' ? 'Toevoegen duurde te lang. Probeer opnieuw.' : 'Kon taak niet toevoegen.', 'error')
+      toast('Kon taak niet toevoegen.', 'error')
     } finally {
       setAdding(false)
     }
@@ -215,9 +207,15 @@ export default function TakenPage() {
   const handleToggle = async (task: Task) => {
     if (task.id.startsWith('pending-')) return
     const nextStatus: TaskStatus = task.status === 'OPEN' ? 'DONE' : 'OPEN'
-    const { error } = await supabase.from('tasks').update({ status: nextStatus }).eq('id', task.id).eq('user_id', task.user_id)
-    if (error) {
-      toast(error.message, 'error')
+    const res = await fetch(`/api/tasks/${task.id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: nextStatus }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      toast((data?.error as string) ?? 'Status bijwerken mislukt.', 'error')
       return
     }
     setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: nextStatus } : t)))
@@ -230,9 +228,10 @@ export default function TakenPage() {
       toast('Taak verwijderd')
       return
     }
-    const { error } = await supabase.from('tasks').delete().eq('id', id).eq('user_id', user!.id)
-    if (error) {
-      toast(error.message, 'error')
+    const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE', credentials: 'include' })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      toast((data?.error as string) ?? 'Verwijderen mislukt.', 'error')
       return
     }
     setTasks((prev) => prev.filter((t) => t.id !== id))
