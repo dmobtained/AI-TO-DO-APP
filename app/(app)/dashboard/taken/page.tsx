@@ -138,14 +138,10 @@ export default function TakenPage() {
     }
   }, [router])
 
+  // Taken direct laden; bij 401 redirect naar login. Niet wachten op client-side user (sessie zit in cookies).
   useEffect(() => {
-    if (authLoading) return
-    if (!user) {
-      router.replace('/')
-      return
-    }
     fetchTasks()
-  }, [user, authLoading, router, fetchTasks])
+  }, [fetchTasks])
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -246,7 +242,7 @@ export default function TakenPage() {
   const todayCount = tasks.filter((t) => t.status === 'OPEN' && isDueToday(t.due_date)).length
   const overdueCount = tasks.filter((t) => t.status === 'OPEN' && isOverdue(t.due_date)).length
 
-  if (authLoading || !user) {
+  if (loading) {
     return (
       <PageContainer>
         <div className="h-8 w-48 rounded bg-hover animate-pulse" />
@@ -262,7 +258,7 @@ export default function TakenPage() {
         title="Taken"
         subtitle="Beheer je taken en deadlines"
         action={
-          !moduleLocked && (
+          !moduleLocked && user && (
             <Button variant={showForm ? 'secondary' : 'primary'} onClick={() => setShowForm((v) => !v)}>
               {showForm ? 'Sluiten' : 'Nieuwe taak'}
             </Button>
